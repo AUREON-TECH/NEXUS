@@ -122,7 +122,7 @@ for(const item of n.items){const row=document.createElement('div');row.className
 if(!n.items.length){const empty=document.createElement('p');empty.className='hint';empty.textContent='Nenhuma regra cadastrada ainda.';card.appendChild(empty)}
 const actions=document.createElement('div');actions.className='po-card-actions';card.appendChild(actions);
 actions.appendChild(btn('Abrir detalhes','btn',()=>go(n.id)));
-actions.appendChild(btn('+ Subregra','btn',()=>go(n.id)));
+actions.appendChild(btn('+ Subregra','btn',()=>{go(n.id);openNode(null)}));
 }
 if(!rules.length){const empty=document.createElement('div');empty.className='po-note';empty.textContent='Nenhuma regra cadastrada. Use “Novo filho” para criar.';board.appendChild(empty)}
 const note=document.createElement('p');note.className='po-note';note.textContent='Regras cadastradas conforme os comunicados recebidos. As penalidades e alterações de metas do fixo devem ser avaliadas pela gestão e pelo jurídico antes de aplicação.';board.appendChild(note);
