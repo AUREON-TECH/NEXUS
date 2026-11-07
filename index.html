@@ -47,7 +47,8 @@ const poNodes=[
 {id:'po-rota-carro',name:'Rota do carro',category:'gestao',parentId:'po',x:-250,y:320,description:'Perda da rota do carro destinada ao deslocamento para o trabalho.',items:['1ª rota perdida: acrescenta 1 casal à meta.','2ª rota perdida: acrescenta 2 casais à meta.','3ª rota perdida: acrescenta 3 casais à meta.','A partir da 4ª ocorrência: acrescenta à meta o mesmo número de casais da ocorrência (4ª = +4, 5ª = +5 e assim por diante).','Registrar a ocorrência e validar a aplicação com a gestão.']},
 {id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'O captador deve avisar com pelo menos 1 hora de antecedência quando não conseguir cumprir o horário. Aviso no prazo não aumenta a meta.',items:['Avisou com 1 hora ou mais de antecedência: nenhum casal acrescentado à meta.','Avisou com menos de 1 hora de antecedência e perdeu o horário: 1ª ocorrência = +1 casal.','2ª ocorrência de aviso fora do prazo: +2 casais.','3ª ocorrência de aviso fora do prazo: +3 casais.','4ª ocorrência e seguintes de aviso fora do prazo: acréscimo progressivo conforme o número de ocorrências (+4, +5 e assim por diante).','Registrar o horário do aviso e o horário previsto de trabalho; validar qualquer medida com a gestão.']},
 {id:'po-bebida-alcoolica',name:'Bebida alcoólica no trabalho',category:'gestao',parentId:'po',x:-200,y:470,description:'Consumo de bebida alcoólica durante o expediente ou atividades de trabalho.',items:['Conforme regra operacional proposta: consumir bebida alcoólica no trabalho acrescenta 5 casais à meta.','Registrar e apurar a ocorrência; validar a medida com a gestão e o jurídico antes da aplicação.']},
-{id:'po-conduta-ilicita',name:'Atos ilícitos e condutas proibidas',category:'gestao',parentId:'po',x:220,y:470,description:'Prática de atos ilícitos ou condutas expressamente proibidas no ambiente de trabalho.',items:['Condutas ilícitas ou proibidas são vedadas durante as atividades profissionais.','Conforme regra proposta: ocorrência comprovada pode resultar em distrato/encerramento contratual, após apuração e avaliação jurídica.','Preservar evidências, assegurar apuração adequada e formalizar qualquer decisão conforme o contrato e a legislação aplicável.']}
+{id:'po-conduta-ilicita',name:'Atos ilícitos e condutas proibidas',category:'gestao',parentId:'po',x:220,y:470,description:'Prática de atos ilícitos ou condutas expressamente proibidas no ambiente de trabalho.',items:['Condutas ilícitas ou proibidas são vedadas durante as atividades profissionais.','Conforme regra proposta: ocorrência comprovada pode resultar em distrato/encerramento contratual, após apuração e avaliação jurídica.','Preservar evidências, assegurar apuração adequada e formalizar qualquer decisão conforme o contrato e a legislação aplicável.']},
+{id:'po-consumo-dia',name:'Consumo do dia — organização e limpeza',category:'gestao',parentId:'po',x:0,y:600,description:'Orientações informativas para manter o ambiente de trabalho organizado e limpo durante e após refeições e lanches.',items:['Manter o ambiente de trabalho limpo, organizado e adequado para a equipe e os clientes.','Não deixar marmitas, restos de comida, copos ou embalagens espalhados nas salas e nos pontos de trabalho.','Após consumir alimentos ou bebidas, recolher os resíduos, descartá-los nos locais apropriados e deixar o espaço limpo.','Orientação informativa sobre o consumo do dia: sem acréscimo de casais e sem penalidade vinculada a este aviso.']}
 ];
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
@@ -145,6 +146,20 @@ if(!storageProtected){
   catch{data=before;storageProtected=true}
  }
 }
+// Migração aditiva de informação de limpeza: não altera nem recria nós excluídos após a migração.
+const CONSUMO_DIA_MIGRATION='aureon-nexus-po-consumo-dia-v1';
+if(!storageProtected){
+ let done=false;try{done=localStorage.getItem(CONSUMO_DIA_MIGRATION)==='1'}catch{}
+ if(!done&&data.nodes.some(n=>n.id==='po')){
+  const previous=deepCopy(data),id='po-consumo-dia';
+  const entry=poNodes.find(n=>n.id===id);
+  if(entry&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(entry));
+  if(entry&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
+  if(!validData(data)){data=previous;storageProtected=true}
+  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(CONSUMO_DIA_MIGRATION,'1')}catch{}}
+  catch{data=previous;storageProtected=true}
+ }
+}
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
 const $=id=>document.getElementById(id),svgNS='http://www.w3.org/2000/svg';
 function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a alteração não foi salva. Exporte um backup e revise os dados antes de continuar.');return false}if(storageProtected){alert('Dados anteriores inválidos ou armazenamento indisponível. Salvamento bloqueado para proteger o conteúdo original. Faça um backup e verifique o armazenamento.');return false}try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert('Não foi possível salvar neste navegador. Exporte um backup para evitar perda de dados.');return false}}
@@ -202,7 +217,7 @@ const rules=childrenOf('po');
 for(const [index,n] of rules.entries()){
 const card=document.createElement('article');card.className='po-card';cards.appendChild(card);
 const top=document.createElement('div');top.className='po-card-top';card.appendChild(top);
-const num=document.createElement('span');num.className='po-card-index';num.textContent='REGRA '+String(index+1).padStart(2,'0');top.appendChild(num);
+const num=document.createElement('span');num.className='po-card-index';num.textContent=n.id==='po-consumo-dia'?'INFORMATIVO • CONSUMO DO DIA':'REGRA '+String(index+1).padStart(2,'0');top.appendChild(num);
 top.appendChild(btn('✎ Editar','btn',()=>openNode(n)));
 const name=document.createElement('h3');name.textContent=n.name;card.appendChild(name);
 if(n.description){const description=document.createElement('p');description.className='po-card-desc';description.textContent=n.description;card.appendChild(description)}
