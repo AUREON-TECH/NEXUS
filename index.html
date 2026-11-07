@@ -360,7 +360,7 @@ for(const [index,n] of rules.entries()){
 if(!rules.length){const empty=document.createElement('div');empty.className='po-note';empty.textContent='Nenhuma regra cadastrada. Use “Novo filho” para criar.';board.appendChild(empty)}
 const note=document.createElement('p');note.className='po-note';note.textContent='As regras e eventuais penalidades devem observar a aprovação do Conselho de Captação e a validação contratual e jurídica aplicável.';board.appendChild(note);
 }
-function isRoomContext(){return current==='salas'||nodeById(current)?.parentId==='salas'}
+function isRoomContext(){const node=nodeById(current);return current==='salas'||(node?.parentId==='salas'&&node.category==='salas')}
 function renderRooms(){
  const board=$('roomsBoard'),on=isRoomContext();
  document.querySelector('.workspace').classList.toggle('rooms-mode',on);board.hidden=!on;
