@@ -45,7 +45,7 @@ const poNodes=[
 {id:'po-meeting',name:'Comer no meeting',category:'gestao',parentId:'po',x:0,y:210,description:'Regra comunicada para consumo de alimentos durante o meeting.',items:['Comer no meeting: acrescenta 1 casal à meta.']},
 {id:'po-informacoes-falsas',name:'Informações falsas do casal',category:'gestao',parentId:'po',x:230,y:210,description:'Quando o captador orientar o casal a mentir ou omitir informações durante a qualificação.',items:['1ª ocorrência comprovada: a meta de casais para o fixo dobra de 22 para 44 casais.','2ª ocorrência comprovada: conforme regra proposta, o captador deixa de receber o fixo.','Para recuperar o fixo: ficar no TOP 3 (1º, 2º ou 3º lugar) durante 2 meses consecutivos.','Apurar e documentar as ocorrências; validar penalidades e condições de remuneração com a gestão e o jurídico antes de aplicar.']},
 {id:'po-rota-carro',name:'Rota do carro',category:'gestao',parentId:'po',x:-250,y:320,description:'Perda da rota do carro destinada ao deslocamento para o trabalho.',items:['1ª rota perdida: acrescenta 1 casal à meta.','2ª rota perdida: acrescenta 2 casais à meta.','3ª rota perdida: acrescenta 3 casais à meta.','A partir da 4ª ocorrência: acrescenta à meta o mesmo número de casais da ocorrência (4ª = +4, 5ª = +5 e assim por diante).','Registrar a ocorrência e validar a aplicação com a gestão.']},
-{id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'Quando o captador perde o horário, mas comunica o ocorrido, deve comparecer ao trabalho ciente do acréscimo de meta previsto.',items:['1ª ocorrência com aviso: comparece ao trabalho com acréscimo de 1 casal na meta.','2ª ocorrência com aviso: comparece ao trabalho com acréscimo de 2 casais na meta.','3ª ocorrência com aviso: comparece ao trabalho com acréscimo de 3 casais na meta.','A partir da 4ª ocorrência: acréscimo progressivo de 1 casal a cada reincidência (4ª = +4, 5ª = +5 e assim por diante).','Registrar o aviso e a ocorrência; validar a aplicação com a gestão.']}
+{id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'O captador deve avisar com pelo menos 1 hora de antecedência quando não conseguir cumprir o horário. Aviso no prazo não aumenta a meta.',items:['Avisou com 1 hora ou mais de antecedência: nenhum casal acrescentado à meta.','Avisou com menos de 1 hora de antecedência e perdeu o horário: 1ª ocorrência = +1 casal.','2ª ocorrência de aviso fora do prazo: +2 casais.','3ª ocorrência de aviso fora do prazo: +3 casais.','4ª ocorrência e seguintes de aviso fora do prazo: acréscimo progressivo conforme o número de ocorrências (+4, +5 e assim por diante).','Registrar o horário do aviso e o horário previsto de trabalho; validar qualquer medida com a gestão.']}
 ];
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
@@ -101,6 +101,30 @@ if(!storageProtected){
    try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(TRANSPORT_RULES_MIGRATION,'1')}catch{}}
    catch{data=previous;storageProtected=true}
   }
+ }
+}
+// Revisão idempotente da regra de antecedência: preserva edições personalizadas.
+const HORARIO_UMA_HORA_MIGRATION='aureon-nexus-po-aviso-1h-v1';
+if(!storageProtected){
+ let done=false;try{done=localStorage.getItem(HORARIO_UMA_HORA_MIGRATION)==='1'}catch{}
+ if(!done){
+  const existing=data.nodes.find(n=>n.id==='po-horario-avisado');
+  const template=poNodes.find(n=>n.id==='po-horario-avisado');
+  const previousItems=["1ª ocorrência com aviso: comparece ao trabalho com acréscimo de 1 casal na meta.","2ª ocorrência com aviso: comparece ao trabalho com acréscimo de 2 casais na meta.","3ª ocorrência com aviso: comparece ao trabalho com acréscimo de 3 casais na meta.","A partir da 4ª ocorrência: acréscimo progressivo de 1 casal a cada reincidência (4ª = +4, 5ª = +5 e assim por diante).","Registrar o aviso e a ocorrência; validar a aplicação com a gestão."];
+  const previousDesc="Quando o captador perde o horário, mas comunica o ocorrido, deve comparecer ao trabalho ciente do acréscimo de meta previsto.";
+  if(existing&&template){
+   const matchItems=JSON.stringify(existing.items)===JSON.stringify(previousItems);
+   const matchDesc=existing.description===previousDesc;
+   if(matchItems||matchDesc){
+    const priorItems=existing.items.slice(),priorDesc=existing.description;
+    if(matchItems)existing.items=template.items.slice();
+    if(matchDesc)existing.description=template.description;
+    if(!validData(data)){existing.items=priorItems;existing.description=priorDesc;storageProtected=true}
+    else try{localStorage.setItem(KEY,JSON.stringify(data))}
+    catch{existing.items=priorItems;existing.description=priorDesc;storageProtected=true}
+   }
+  }
+  if(!storageProtected){try{localStorage.setItem(HORARIO_UMA_HORA_MIGRATION,'1')}catch{}}
  }
 }
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
