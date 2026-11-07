@@ -371,15 +371,7 @@ function renderRooms(){
  const title=document.createElement('h2');intro.appendChild(title);
  const sub=document.createElement('p');intro.appendChild(sub);
  const content=document.createElement('div');board.appendChild(content);
- const card=(entry,role,actions)=>{
-  const c=document.createElement('article');c.className='room-card';grid.appendChild(c);
-  const name=document.createElement('h3');name.textContent=entry.name;c.appendChild(name);
-  if(entry.description){const d=document.createElement('p');d.textContent=entry.description;c.appendChild(d)}
-  const count=document.createElement('span');count.className='room-count';count.textContent=role;c.appendChild(count);
-  const tools=document.createElement('div');tools.className='room-actions';c.appendChild(tools);
-  for(const [label,cls,action] of actions)tools.appendChild(btn(label,cls,action));
- };
- if(current==='salas'){
+  if(current==='salas'){
   title.textContent='Salas e equipes';sub.textContent='Adicione salas e abra cada uma para cadastrar a equipe e suas funções.';
   header.appendChild(btn('+ Adicionar sala','btn primary',()=>openNode(null,'salas')));
   const rooms=childrenOf('salas');
@@ -623,7 +615,10 @@ function zoom(mul){const r=$('map').getBoundingClientRect();zoomAt(scale*mul,{x:
 $('plus').onclick=()=>zoom(1.4);$('minus').onclick=()=>zoom(1/1.4);$('reset').onclick=fit;
 function normalizeSearch(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR')}
 function searchAll(value){const root=$('searchResults');root.replaceChildren();const q=normalizeSearch(value.trim());if(!q){root.hidden=true;return}const hits=data.nodes.filter(n=>normalizeSearch([n.name,n.description,...n.items].join(' ')).includes(q)).slice(0,20);root.hidden=false;if(!hits.length){const no=document.createElement('div');no.className='search-result';no.textContent='Nenhum resultado encontrado';root.appendChild(no)}for(const n of hits){const row=document.createElement('button');row.type='button';row.className='search-result';row.style.cssText='display:block;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid #263c58;font:inherit;';row.dataset.nodeId=n.id;const strong=document.createElement('strong');strong.textContent=n.name;const small=document.createElement('small');const names=[];let p=n;let lim=0;while(p&&lim++<30){names.unshift(p.name);p=nodeById(p.parentId)}small.textContent=names.join(' › ');row.append(strong,small);row.onclick=()=>{go(n.id);root.hidden=true};row.onfocus=()=>{row.style.background='#203857'};row.onblur=()=>{row.style.background='transparent'};root.appendChild(row)}}
-$('search').oninput=e=>searchAll(e.target.value);$('search').onkeydown=e=>{if(e.key==='Enter'){const first=$('searchResults').querySelector('.search-result[data-node-id]');if(first)first.click()}if(e.key==='Escape')$('searchResults').hidden=true};
+$('search').oninput=e=>searchAll(e.target.value);$('search').onkeydown=e=>{const rows=[...$('searchResults').querySelectorAll('.search-result[data-node-id]')];if(e.key==='ArrowDown'&&rows.length){e.preventDefault();rows[0].focus()}if(e.key==='Enter'){const first=rows[0];if(first)first.click()}if(e.key==='Escape')$('searchResults').hidden=true};
+$('searchResults').addEventListener('keydown',e=>{const rows=[...$('searchResults').querySelectorAll('.search-result[data-node-id]')],i=rows.indexOf(document.activeElement);if(i<0)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();rows[(i+(e.key==='ArrowDown'?1:-1)+rows.length)%rows.length].focus()}else if(e.key==='Escape'){e.preventDefault();$('searchResults').hidden=true;$('search').focus()}});
+window.addEventListener('keydown',e=>{if((e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey)&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&!document.activeElement?.isContentEditable){e.preventDefault();$('search').focus()}});
+
 $('addNodeMenu').onclick=$('addNodeTop').onclick=()=>openNode(null);$('connectMenu').onclick=connectOpen;
 $('cancelModal').onclick=()=>$('modal').classList.remove('show');$('cancelConnect').onclick=()=>$('connectModal').classList.remove('show');
 for(const id of ['modal','connectModal'])$(id).onclick=e=>{if(e.target===$(id))$(id).classList.remove('show')};
@@ -631,9 +626,9 @@ $('exportMenu').onclick=()=>{if(storageProtected||!validData(data)){alert('Backu
 $('importMenu').onclick=()=>{if(storageProtected){alert('Importação bloqueada: os dados locais não puderam ser lidos com segurança. Recupere o armazenamento antes de substituir qualquer cadastro.');return}$('importFile').click()};$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>8*1024*1024)throw Error('O arquivo excede o limite de 8 MB.');const d=JSON.parse(await f.text());if(!validData(d))throw Error('Formato inválido');if(storageProtected)throw Error('Armazenamento protegido: importação bloqueada para preservar dados anteriores.');const incoming={nodes:d.nodes,edges:d.edges};
  const originalIds=new Set(data.nodes.map(n=>n.id));
  const additions=incoming.nodes.filter(n=>!originalIds.has(n.id));
- const existingEdges=new Set(data.edges.map(e=>e.from+'|'+e.to));
+ const existingEdges=new Set(data.edges.map(e=>JSON.stringify([e.from,e.to])));
  const allIds=new Set([...originalIds,...additions.map(n=>n.id)]);
- const newEdges=incoming.edges.filter(e=>allIds.has(e.from)&&allIds.has(e.to)&&!existingEdges.has(e.from+'|'+e.to));
+ const newEdges=incoming.edges.filter(e=>{const key=JSON.stringify([e.from,e.to]);if(!allIds.has(e.from)||!allIds.has(e.to)||existingEdges.has(key))return false;existingEdges.add(key);return true});
  const merged={nodes:[...data.nodes,...additions],edges:[...data.edges,...newEdges]};
  if(!validData(merged))throw Error('A mesclagem excede os limites ou contém vínculos inválidos. Nenhum dado foi alterado.');
  if(!additions.length&&!newEdges.length){alert('O backup não contém novos núcleos ou vínculos. Os dados atuais foram preservados.');return}
