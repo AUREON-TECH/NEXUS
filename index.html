@@ -57,9 +57,31 @@
 .room-form .btn{height:42px}.room-empty{padding:20px;border:1px dashed #45648b;border-radius:12px;color:#aac4e4}
 @media(max-width:760px){.rooms-board{top:205px;left:12px;right:12px}.rooms-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.room-card{padding:12px}.room-form{grid-template-columns:1fr}.room-form .btn{width:100%}}
 @media(max-width:420px){.rooms-grid{grid-template-columns:1fr}}
+.workspace.analytics-mode #map,.workspace.analytics-mode .bottom{display:none!important}
+.analytics-board{position:absolute;z-index:5;top:205px;left:20px;right:20px;bottom:12px;overflow-y:auto;padding:0 3px 24px}
+.analytics-board[hidden]{display:none}.an-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.an-head h2{font-size:25px;margin:0 0 5px}.an-sub,.an-caption{font-size:12px;color:#96afd0;line-height:1.5}
+.an-filters{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.an-filters label{font-size:12px;color:#9cb5d5;display:grid;gap:5px}
+.an-filters select,.an-filters input{background:#0d1c31;color:#eef5ff;border:1px solid #39597f;border-radius:8px;padding:9px;max-width:225px}
+.an-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.an-kpi,.an-panel{background:linear-gradient(155deg,#1a2d49,#102036);border:1px solid #36516f;border-radius:14px;padding:15px}
+.an-kpi small{font-size:11px;color:#95b1d5}.an-kpi strong{display:block;font-size:clamp(16px,2.3vw,25px);margin-top:8px;overflow-wrap:anywhere}
+.an-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;margin-top:12px}
+.an-panel h3{font-size:16px;margin:0 0 14px}
+.an-chart{height:170px;display:flex;gap:5px;align-items:flex-end;padding:7px 0 0}
+.an-bar-wrap{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+.an-bar{width:100%;max-width:32px;min-height:2px;background:linear-gradient(#75aefa,#315fb8);border-radius:4px 4px 0 0}.an-bar-wrap small{color:#8fa8c8;font-size:9px}
+.an-table-wrap{overflow:auto;max-height:430px}.an-table{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}.an-table th,.an-table td{padding:10px;border-bottom:1px solid #304763;text-align:right;white-space:nowrap}.an-table th:first-child,.an-table td:first-child{text-align:left;position:sticky;left:0;background:#14243b}.an-table th{color:#92b3dc}
+.an-panel-wide{margin-top:12px}
+.an-cost-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.an-cost-grid label{display:grid;gap:5px;font-size:12px;color:#a4bad8}.an-cost-grid input{width:100%;min-width:0;background:#0b192c;color:white;border:1px solid #405c7e;border-radius:9px;padding:10px}
+.an-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.an-notice{font-size:12px;line-height:1.5;color:#acc6e6;border-left:3px solid #739fe0;padding:8px 10px;background:#132842;margin-top:12px}
+@media(max-width:900px){.an-layout{grid-template-columns:1fr}.an-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.analytics-board{top:205px;left:10px;right:10px}.an-cost-grid{grid-template-columns:1fr 1fr}.an-kpi{padding:11px}.an-head h2{font-size:21px}}
 .zoom .pill{display:grid;place-items:center;min-width:61px;color:#c3dafc;font-variant-numeric:tabular-nums}.zoom .btn{min-height:39px}.map .node text{font-family:Inter,ui-sans-serif,system-ui,sans-serif}@media(max-width:760px){.zoom .pill{min-width:46px;padding:8px}.zoom{gap:4px}.zoom .btn{font-size:11px}} </style></head><body>
 <div class="app"><aside class="side" id="sidebar"><div class="brand"><div class="logo">✧</div><div><b>NEXUS</b><small>OPERATIONAL INTELLIGENCE</small></div></div><p class="eyebrow">EXPLORAR</p><div id="filters"></div><p class="eyebrow">GESTÃO</p><button class="navitem" id="addNodeMenu">⊕ &nbsp; Adicionar elemento</button><button class="navitem" id="connectMenu">⤴ &nbsp; Criar conexão</button><button class="navitem" id="exportMenu">⇩ &nbsp; Exportar backup</button><button class="navitem" id="importMenu">⇧ &nbsp; Importar backup</button><input id="importFile" type="file" accept=".json,application/json" hidden><div class="footer">NEXUS • Central de comando<br>Dados deste dispositivo • v1.0<br><br>Para sincronização entre dispositivos, será necessário conectar um banco de dados e autenticação.</div></aside>
-<main class="workspace"><div class="toolbar"><button class="btn mobile-toggle" id="menuBtn" aria-label="Abrir menu de navegação">☰</button><div class="top-title"><h1 id="pageTitle">Mapa da Operação</h1><p>Explore relações, equipes, processos e decisões</p></div><input id="search" class="search" aria-label="Buscar núcleos, pessoas e processos" placeholder="⌕ Buscar em tudo..." autocomplete="off"><div id="searchResults" class="search-results" hidden></div><button class="btn primary" id="addNodeTop">+ Novo subnúcleo</button></div><div id="breadcrumbs" class="breadcrumbs"></div><div id="nucleusTools" class="nucleus-tools"></div><div id="nucleusSummary" class="nucleus-summary" hidden></div><div id="guide" class="guide">Clique em uma bolinha para entrar</div><section id="centerPanel" class="centerpanel" hidden></section><section id="poBoard" class="po-board" hidden tabindex="-1" aria-label="Regras do P.O"></section><section id="roomsBoard" class="rooms-board" hidden aria-label="Salas e equipes"></section><svg id="map" class="map" aria-label="Mapa interativo da operação"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg><div class="bottom"><div class="pill" id="mapInfo">Arraste o mapa • Clique para explorar</div><div class="zoom"><button class="btn" id="minus" aria-label="Diminuir zoom">−</button><button class="btn" id="reset" title="Ajustar mapa à tela">Ajustar mapa</button><span class="pill" id="zoomLevel" aria-live="polite">100%</span><button class="btn" id="plus" aria-label="Aumentar zoom">+</button></div></div></main>
+<main class="workspace"><div class="toolbar"><button class="btn mobile-toggle" id="menuBtn" aria-label="Abrir menu de navegação">☰</button><div class="top-title"><h1 id="pageTitle">Mapa da Operação</h1><p>Explore relações, equipes, processos e decisões</p></div><input id="search" class="search" aria-label="Buscar núcleos, pessoas e processos" placeholder="⌕ Buscar em tudo..." autocomplete="off"><div id="searchResults" class="search-results" hidden></div><button class="btn primary" id="addNodeTop">+ Novo subnúcleo</button></div><div id="breadcrumbs" class="breadcrumbs"></div><div id="nucleusTools" class="nucleus-tools"></div><div id="nucleusSummary" class="nucleus-summary" hidden></div><div id="guide" class="guide">Clique em uma bolinha para entrar</div><section id="centerPanel" class="centerpanel" hidden></section><section id="poBoard" class="po-board" hidden tabindex="-1" aria-label="Regras do P.O"></section><section id="roomsBoard" class="rooms-board" hidden aria-label="Salas e equipes"></section><section id="analyticsBoard" class="analytics-board" hidden aria-label="Dashboard de desempenho e custos"></section><svg id="map" class="map" aria-label="Mapa interativo da operação"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg><div class="bottom"><div class="pill" id="mapInfo">Arraste o mapa • Clique para explorar</div><div class="zoom"><button class="btn" id="minus" aria-label="Diminuir zoom">−</button><button class="btn" id="reset" title="Ajustar mapa à tela">Ajustar mapa</button><span class="pill" id="zoomLevel" aria-live="polite">100%</span><button class="btn" id="plus" aria-label="Aumentar zoom">+</button></div></div></main>
 <aside class="detail" id="detail"></aside></div>
 <div class="modalback" id="modal"><form class="modal" id="nodeForm"><h2 id="modalTitle">Novo elemento</h2><label class="field">Nome<input name="name" required maxlength="80" placeholder="Ex.: Vila Natal"></label><label class="field">Categoria<select name="category" id="categorySelect"></select></label><label class="field">Descrição<textarea name="description" placeholder="Qual a função deste elemento?"></textarea></label><label class="field">Informações e processos (uma linha por item)<textarea name="items" placeholder="Responsável: Felipe&#10;Horário: 17h às 23h&#10;Processo de agendamento"></textarea></label><div class="formbuttons"><button type="button" class="btn" id="cancelModal">Cancelar</button><button type="submit" class="btn primary">Salvar elemento</button></div></form></div>
 <div class="modalback" id="connectModal"><form class="modal" id="connectForm"><h2>Criar conexão</h2><label class="field">Origem<select name="from" id="connFrom"></select></label><label class="field">Destino<select name="to" id="connTo"></select></label><div class="formbuttons"><button type="button" class="btn" id="cancelConnect">Cancelar</button><button class="btn primary">Conectar elementos</button></div></form></div>
@@ -244,6 +266,18 @@ if(!storageProtected){
   if(!storageProtected){try{localStorage.setItem(CONSELHO_AGENDA_MIGRATION,'1')}catch{}}
  }
 }
+// Núcleo aditivo de inteligência: nunca substitui um cadastro local já existente.
+const ANALYTICS_NODE_MIGRATION='aureon-nexus-analytics-node-v1';
+if(!storageProtected){
+ let ready=false;try{ready=localStorage.getItem(ANALYTICS_NODE_MIGRATION)==='1'}catch{}
+ if(!ready){
+  const before=deepCopy(data),id='inteligencia';
+  if(!data.nodes.some(n=>n.id===id))data.nodes.push({id,name:'INTELIGÊNCIA',category:'resultados',parentId:'central',x:0,y:-385,description:'Dashboard histórico de produtividade, qualidade, vendas e custos por profissional.',items:['Histórico do TSExplorer: novembro de 2025 a novembro de 2026.','Dados de clientes não são exibidos nem armazenados no dashboard.']});
+  if(data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='central'&&e.to===id))data.edges.push({from:'central',to:id});
+  if(!validData(data)){data=before;storageProtected=true}
+  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(ANALYTICS_NODE_MIGRATION,'1')}catch{}}catch{data=before;storageProtected=true}
+ }
+}
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
 const $=id=>document.getElementById(id),svgNS='http://www.w3.org/2000/svg';
 function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a alteração não foi salva. Exporte um backup e revise os dados antes de continuar.');return false}if(storageProtected){alert('Dados anteriores inválidos ou armazenamento indisponível. Salvamento bloqueado para proteger o conteúdo original. Faça um backup e verifique o armazenamento.');return false}try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert('Não foi possível salvar neste navegador. Exporte um backup para evitar perda de dados.');return false}}
@@ -267,6 +301,7 @@ function childrenOf(id){return data.nodes.filter(n=>n.parentId===id)}
 function go(id){if(!nodeById(id))return;showInfo=childrenOf(id).length===0&&id!=='central';current=id;selected=id;filter='all';query='';$('search').value='';$('searchResults').hidden=true;render();fit();$('sidebar').classList.remove('open')}
 function crumbs(){const r=$('breadcrumbs');r.replaceChildren();const path=[];let n=nodeById(current),limit=0;while(n&&limit++<30){path.unshift(n);n=nodeById(n.parentId)}for(const [i,item] of path.entries()){if(i){const sep=document.createElement('span');sep.textContent='›';sep.style.color='#6584a9';r.appendChild(sep)}r.appendChild(btn(item.name,'crumb',()=>go(item.id)))}}
 function nav(){const holder=$('filters');holder.replaceChildren();const back=current!=='central'?btn('← Voltar ao nível anterior','navitem',()=>go(nodeById(current)?.parentId||'central')):null;if(back)holder.appendChild(back);
+holder.appendChild(btn('▤  Dashboard de resultados','navitem'+(current==='inteligencia'?' active':''),()=>go('inteligencia')));
 holder.appendChild(btn('◎  Mapa principal','navitem'+(current==='central'?' active':''),()=>go('central')));
 for(const [id,c] of Object.entries(categories)){if(id==='central')continue;const matching=childrenOf('central').filter(n=>n.category===id);if(!matching.length)continue;const b=btn(c.icon+'  '+c.label+'  ('+matching.length+')','navitem',()=>{if(matching.length===1)go(matching[0].id);else{go('central');filter=id;render();fit()}});holder.appendChild(b)}
 if(current!=='central'){const h=document.createElement('p');h.className='eyebrow';h.textContent='NESTE NÚCLEO';holder.appendChild(h);for(const n of childrenOf(current))holder.appendChild(btn('○  '+n.name,'navitem',()=>go(n.id)))}
@@ -285,7 +320,7 @@ const short=n.name.length>18?n.name.slice(0,17)+'…':n.name;textnode(g,short,{y
 g.addEventListener('pointerdown',ev=>{ev.stopPropagation();if(pointer)return;pointer={type:'node',id:n.id,pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY,ox:n.x,oy:n.y,center:central};moved=false;$('map').setPointerCapture(ev.pointerId)});
 g.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();if(central){showInfo=!showInfo;render()}else go(n.id)}})}
 $('mapInfo').textContent=storageProtected?'⚠ Armazenamento protegido: dados locais não carregados. Não edite nem substitua este cadastro.':kids.length+' subnúcleos • '+data.nodes.length+' elementos cadastrados';const summary=$('nucleusSummary');summary.replaceChildren();if(kids.length>0&&current!=='central'){summary.hidden=false;const name=document.createElement('strong');name.textContent=center.name;const desc=document.createElement('small');desc.textContent=center.description||'Clique nas bolinhas para explorar este núcleo.';summary.append(name,desc)}else summary.hidden=true;
-const leaf=kids.length===0&&current!=='central';$('map').classList.toggle('is-leaf',leaf);$('guide').hidden=leaf||kids.length===0;detail();renderPO();renderRooms()}
+const leaf=kids.length===0&&current!=='central';$('map').classList.toggle('is-leaf',leaf);$('guide').hidden=leaf||kids.length===0;detail();renderPO();renderRooms();renderAnalytics()}
 function renderPO(){
 const on=current==='po',board=$('poBoard'),map=$('map'),summary=$('nucleusSummary'),guide=$('guide'),bottom=document.querySelector('.bottom');
 document.querySelector('.workspace').classList.toggle('po-mode',on);
@@ -387,7 +422,109 @@ function renderRooms(){
  }
 }
 
-function toolsPanel(){const root=$('nucleusTools');root.replaceChildren();const n=nodeById(current);if(!n)return;if(current==='po'){root.appendChild(btn('☷ Ver regras','btn',()=>{$('poBoard').scrollTo({top:0,behavior:'smooth'});$('poBoard').focus({preventScroll:true})}))}else if(isRoomContext()){root.appendChild(btn('▦ Salas e equipes','btn',()=>{$('roomsBoard').scrollTo({top:0,behavior:'smooth'})}))}else root.appendChild(btn(showInfo?'✕ Fechar informações':'☷ Informações','btn',()=>{showInfo=!showInfo;render()}));root.appendChild(btn('✎ Editar núcleo','btn',()=>openNode(n)));if(current!=='central')root.appendChild(btn('← Voltar','btn',()=>go(n.parentId||'central')));if(current!=='central')root.appendChild(btn('Excluir núcleo','btn danger',()=>removeNode(current)));root.appendChild(btn('⊕ Novo filho','btn primary',()=>openNode(null)))}
+const ANALYTICS_KEY='nexus-performance-aggregated-v1',ANALYTICS_COSTS_KEY='nexus-performance-costs-v1';
+const monthlySeed=[["2025-11",165,126,22,17557966,7],["2025-12",456,341,59,7262281,24],["2026-01",402,289,42,5719941,23],["2026-02",275,200,28,3236000,16],["2026-03",349,246,55,5890734,22],["2026-04",411,303,70,8794780,32],["2026-05",438,285,84,10239064,44],["2026-06",488,331,75,10362620,37],["2026-07",734,543,104,15162876,54],["2026-08",395,271,76,9482310,48],["2026-09",455,300,75,8961590,42],["2026-10",449,299,73,7382302,51],["2026-11",72,47,19,2336300,19]];
+let analyticsRows=[],analyticsCosts={};
+try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_KEY)||'null');if(Array.isArray(saved)&&saved.length<10000&&saved.every(x=>Array.isArray(x)&&x.length===14&&typeof x[2]==='string'))analyticsRows=saved}catch{}
+try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_COSTS_KEY)||'null');if(saved&&typeof saved==='object'&&!Array.isArray(saved))analyticsCosts=saved}catch{}
+let anMonth='all',anRole='captador',anQuery='',anSelected='';
+const anBRL=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(v||0);
+const anNum=v=>new Intl.NumberFormat('pt-BR').format(v||0);
+const anPct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+function anSave(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{alert('Não foi possível salvar os dados analíticos. Exporte um backup antes de continuar.');return false}}
+function anAggregate(rows){const map=new Map();
+ for(const r of rows){const key=r[1]+'|'+r[2],val=map.get(key)||{role:r[1],name:r[2],att:0,q:0,nq:0,nt:0,sold:0,active:0,cancel:0,mixed:0,vgv:0,net:0,gifts:0};
+ const idx=[3,4,5,6,7,8,9,10,11,12,13],fields=['att','q','nq','nt','sold','active','cancel','mixed','vgv','net','gifts'];
+ fields.forEach((f,i)=>val[f]+=Number(r[idx[i]])||0);map.set(key,val)}
+ return [...map.values()]}
+function anCsvLines(text){const rows=[],row=[];let cell='',quoted=false;
+ for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}
+ else if(ch===';'&&!quoted){row.push(cell);cell=''}
+ else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row.slice());row.length=0;cell=''}
+ else cell+=ch}
+ if(cell||row.length){row.push(cell);rows.push(row.slice())}
+ return rows}
+function anMoney(v){const n=Number(String(v||'').replace(/R\$/g,'').replace(/\./g,'').replace(',','.').trim());return Number.isFinite(n)?n:0}
+function anGift(v){let result=0;const parts=String(v||'').matchAll(/VALOR:\s*(?:R\$\s*)?([\d.,]+)/gi);
+ for(const m of parts){let str=m[1];if(str.includes('.')&&str.includes(','))str=str.replace(/\./g,'').replace(',','.');else str=str.replace(',','.');const x=Number(str);if(Number.isFinite(x))result+=x}return result}
+function anImport(text){
+ const table=anCsvLines(text),headers=table.findIndex(row=>row[0]?.trim()==='Data de atendimento'&&row[1]?.trim()==='Promotor de marketing');
+ if(headers<0)throw Error('Colunas do TSExplorer não encontradas.');
+ const acc=new Map(),months=new Set(),required=30;let valid=0;
+ for(const r of table.slice(headers+1)){if(r.length<required||!/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(r[0]))continue;
+ const [dd,mm,yy]=r[0].split('/').map(Number),date=new Date(yy,mm-1,dd);if(date.getDate()!==dd||date.getMonth()!==mm-1)continue;
+ const month=yy+'-'+String(mm).padStart(2,'0'),gross=anMoney(r[14]);months.add(month);valid++;
+ const qual=r[27].trim().toUpperCase(),notour=r[15].trim().toUpperCase()==='NOTOUR',status=r[16].toUpperCase().split('#').map(x=>x.trim()).filter(Boolean);
+ const active=status.length>0&&status.every(x=>x==='ATIVO'),cancel=status.length>0&&status.every(x=>x==='CANCELADO'),mixed=status.length>0&&!active&&!cancel;
+ const gifts=anGift(r[29]);
+ for(const [role,index] of [['captador',1],['liner',2],['closer',3]]){const name=r[index].trim().replace(/\s+/g,' ').toUpperCase();if(!name)continue;
+ const key=month+'|'+role+'|'+name;
+ const a=acc.get(key)||[month,role,name,0,0,0,0,0,0,0,0,0,0,0];
+ a[3]++;a[4]+=qual==='Q';a[5]+=qual==='NQ';a[6]+=notour;a[7]+=gross>0;a[8]+=gross>0&&active;a[9]+=gross>0&&cancel;a[10]+=gross>0&&mixed;a[11]+=gross;a[12]+=active?gross:0;a[13]+=gifts;acc.set(key,a)
+ }}
+ if(valid===0)throw Error('Nenhum atendimento válido encontrado.');
+ const result=[...acc.values()];if(result.length>10000)throw Error('Arquivo excede o limite de registros agregados.');
+ return{result,valid,months:months.size}
+}
+function anDownload(filename,value){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
+function renderAnalytics(){
+ const board=$('analyticsBoard'),on=current==='inteligencia';document.querySelector('.workspace').classList.toggle('analytics-mode',on);board.hidden=!on;if(!on)return;
+ $('map').hidden=true;document.querySelector('.bottom').hidden=true;$('nucleusSummary').hidden=true;$('guide').hidden=true;$('centerPanel').hidden=true;board.replaceChildren();
+ const make=(tag,cls,parent,content)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(content!==undefined)el.textContent=content;parent.appendChild(el);return el};
+ const header=make('header','an-head',board),titles=make('div','',header);
+ make('h2','',titles,'Inteligência de resultados');
+ make('p','an-sub',titles,'Histórico TSExplorer • 01/11/2025 a 06/11/2026 • comparativos por profissional');
+ const fileInput=make('input','',header);fileInput.type='file';fileInput.accept='.csv,text/csv';fileInput.hidden=true;
+ const importBtn=btn('Importar CSV TSExplorer','btn primary',()=>fileInput.click());header.appendChild(importBtn);
+ fileInput.onchange=async()=>{const file=fileInput.files?.[0];if(!file)return;
+ try{if(file.size>10*1024*1024)throw Error('Limite de 10 MB.');
+ const bytes=await file.arrayBuffer(),decoder=new TextDecoder('windows-1252'),parsed=anImport(decoder.decode(bytes));
+ if(!confirm('Foram identificados '+parsed.valid+' atendimentos. Substituir somente a análise agregada anterior? Os núcleos, salas e regras do NEXUS serão preservados.'))return;
+ if(!anSave(ANALYTICS_KEY,parsed.result))return;analyticsRows=parsed.result;anSelected='';renderAnalytics();toast('Histórico atualizado com '+parsed.valid+' atendimentos.')}
+ catch(e){alert('Importação não concluída: '+e.message)}finally{fileInput.value=''}};
+ const filters=make('div','an-filters',board);
+ const control=(label,items,value,fn)=>{const group=make('label','',filters,label),sel=make('select','',group);for(const [v,l] of items){const opt=make('option','',sel,l);opt.value=v}sel.value=value;sel.onchange=()=>fn(sel.value);return sel};
+ const months=[...new Set(analyticsRows.length?analyticsRows.map(r=>r[0]):monthlySeed.map(r=>r[0]))].sort().reverse();
+ control('Mês',[['all','Todo o histórico'],...months.map(m=>[m,m])],anMonth,v=>{anMonth=v;renderAnalytics()});
+ control('Função',[['captador','Captadores'],['liner','Liners'],['closer','Closers']],anRole,v=>{anRole=v;anSelected='';renderAnalytics()});
+ const searchGroup=make('label','',filters,'Profissional'),search=make('input','',searchGroup);search.type='search';search.placeholder='Buscar nome';search.value=anQuery;search.oninput=()=>{anQuery=search.value;renderAnalytics();const next=board.querySelector('.an-filters input');next?.focus();next?.setSelectionRange(anQuery.length,anQuery.length)};
+ const monthly=monthlySeed.filter(r=>anMonth==='all'||r[0]===anMonth);
+ const sum=(i)=>monthly.reduce((n,r)=>n+r[i],0),attendance=sum(1),gross=sum(4),sold=sum(3),qualified=sum(2);
+ const summary=make('div','an-kpis',board);
+ for(const [label,value] of [['Atendimentos',anNum(attendance)],['VGV bruto',anBRL(gross)],['Atendimentos com venda',anNum(sold)],['Eficiência bruta',anPct(sold,attendance)]]){const c=make('div','an-kpi',summary);make('small','',c,label);make('strong','',c,value)}
+ const layout=make('div','an-layout',board),chartPanel=make('section','an-panel',layout);
+ make('h3','',chartPanel,'Evolução mensal do VGV bruto');
+ const chart=make('div','an-chart',chartPanel),max=Math.max(...monthly.map(r=>r[4]),1);
+ for(const r of monthly){const container=make('div','an-bar-wrap',chart),bar=make('div','an-bar',container);bar.style.height=Math.max(2,r[4]/max*140)+'px';bar.title=r[0]+' • '+anBRL(r[4]);make('small','',container,r[0].slice(5))}
+ make('p','an-caption',chartPanel,'Base histórica incorporada: 5.089 atendimentos. A soma por captador, liner e closer não deve ser feita em conjunto.');
+ const quality=make('section','an-panel',layout);make('h3','',quality,'Qualidade e contratos');
+ const active=sum(5);for(const [label,value] of [['Qualificados (Q)',anNum(qualified)+' • '+anPct(qualified,attendance)],['Vendas com status integralmente ativo',anNum(active)],['Ticket médio bruto',anBRL(sold?gross/sold:0)]]){const card=make('div','an-kpi',quality);make('small','',card,label);make('strong','',card,value)}
+ const ranking=make('section','an-panel an-panel-wide',board);make('h3','',ranking,'Ranking por profissional');
+ if(!analyticsRows.length){make('p','an-notice',ranking,'O resumo mensal já está disponível. Para habilitar o ranking individual, importe o CSV original do TSExplorer pelo botão acima. A importação extrai apenas os resultados agregados, sem guardar nomes de casais.');}
+ else{
+ const visible=anAggregate(analyticsRows.filter(r=>(anMonth==='all'||r[0]===anMonth)&&r[1]===anRole));
+ const ranked=visible.filter(r=>r.name.toLocaleLowerCase('pt-BR').includes(anQuery.toLocaleLowerCase('pt-BR'))).sort((a,b)=>b.net-a.net||b.vgv-a.vgv);
+ const tablebox=make('div','an-table-wrap',ranking),table=make('table','an-table',tablebox);
+ const tr=make('tr','',table);for(const name of ['Profissional','Casais','Q','Vendas','Eficiência','VGV bruto','VGV ativo confirmado','Brindes estimados'])make('th','',tr,name);
+ for(const r of ranked.slice(0,150)){const line=make('tr','',table);line.style.cursor='pointer';line.title='Clique para detalhar custos';line.onclick=()=>{anSelected=r.name;renderAnalytics()};
+ for(const v of [r.name,anNum(r.att),anNum(r.q),anNum(r.sold),anPct(r.sold,r.att),anBRL(r.vgv),anBRL(r.net),anBRL(r.gifts)])make('td','',line,v)}
+ make('p','an-caption',ranking,'Clique em um profissional para informar os custos reais. VGV ativo confirmado exclui linhas com status misto ou cancelado.');
+ const selected=visible.find(r=>r.name===anSelected);
+ if(selected){const panel=make('section','an-panel an-panel-wide',board);make('h3','',panel,'Custo do profissional — '+selected.name);
+ const key=anMonth+'|'+anRole+'|'+selected.name,prior=analyticsCosts[key]||{},fields=[['fixo','Fixo / mínimo garantido'],['comissao','Comissões'],['ajuda','Ajuda de custo'],['spiff','Bônus / SPIFF'],['outros','Outros custos']];
+ const inputGrid=make('div','an-cost-grid',panel),inputs={};
+ for(const [field,label] of fields){const wrap=make('label','',inputGrid,label),input=make('input','',wrap);input.type='number';input.min=0;input.max=99999999;input.step='.01';input.value=prior[field]??'';inputs[field]=input}
+ const sums=Object.values(prior).reduce((n,x)=>n+(Number(x)||0),0);
+ make('p','an-notice',panel,'Brindes estimados pelo relatório: '+anBRL(selected.gifts)+' | Demais custos registrados: '+anBRL(sums)+' | Custo total estimado: '+anBRL(selected.gifts+sums)+' | Custo por casal: '+anBRL(selected.att?(selected.gifts+sums)/selected.att:0)+'. Não confundir VGV com lucro.');
+ const actions=make('div','an-actions',panel);
+ actions.appendChild(btn('Salvar custos','btn primary',()=>{const next={};for(const [k] of fields){const v=inputs[k].value;if(v&&!Number.isNaN(Number(v)))next[k]=Number(v)}const previous=analyticsCosts;analyticsCosts={...analyticsCosts,[key]:next};if(!anSave(ANALYTICS_COSTS_KEY,analyticsCosts)){analyticsCosts=previous;return}renderAnalytics();toast('Custos salvos neste navegador.')}));
+ }}
+ const footer=make('div','an-actions',board);
+ footer.appendChild(btn('Exportar backup da análise','btn',()=>anDownload('nexus-desempenho-backup.json',{version:1,history:analyticsRows,costs:analyticsCosts})));
+ make('p','an-notice',board,'Fonte: TSExplorer — Controle de sala. Os custos fixos, comissões e bônus não constam na planilha, portanto precisam ser preenchidos. Valores de brindes são estimativas extraídas das descrições. Contratos com status misto não entram no VGV ativo confirmado. Dados agregados salvos apenas neste navegador.');
+}
+
+function toolsPanel(){const root=$('nucleusTools');root.replaceChildren();const n=nodeById(current);if(!n)return;if(current==='po'){root.appendChild(btn('☷ Ver regras','btn',()=>{$('poBoard').scrollTo({top:0,behavior:'smooth'});$('poBoard').focus({preventScroll:true})}))}else if(isRoomContext()){root.appendChild(btn('▦ Salas e equipes','btn',()=>{$('roomsBoard').scrollTo({top:0,behavior:'smooth'})}))}else if(current==='inteligencia'){root.appendChild(btn('▤ Dashboard','btn',()=>{$('analyticsBoard').scrollTo({top:0,behavior:'smooth'})}))}else root.appendChild(btn(showInfo?'✕ Fechar informações':'☷ Informações','btn',()=>{showInfo=!showInfo;render()}));root.appendChild(btn('✎ Editar núcleo','btn',()=>openNode(n)));if(current!=='central')root.appendChild(btn('← Voltar','btn',()=>go(n.parentId||'central')));if(current!=='central')root.appendChild(btn('Excluir núcleo','btn danger',()=>removeNode(current)));root.appendChild(btn('⊕ Novo filho','btn primary',()=>openNode(null)))}
 function detail(){const panel=$('centerPanel');panel.replaceChildren();const n=nodeById(current);if(!n)return;const children=childrenOf(current);
 const show=showInfo&&current!=='po';panel.hidden=!show;if(!show)return;
 const c=categories[n.category],header=document.createElement('div');header.className='category';header.style.color=c.color;header.textContent='● '+c.label.toUpperCase();panel.appendChild(header);
