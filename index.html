@@ -625,14 +625,27 @@ for(const id of ['modal','connectModal'])$(id).onclick=e=>{if(e.target===$(id))$
 $('exportMenu').onclick=()=>{if(storageProtected||!validData(data)){alert('Backup indisponível: os dados locais estão protegidos ou a estrutura atual é inválida. Preserve o cadastro original e revise os dados antes de exportar.');return}const blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 $('importMenu').onclick=()=>{if(storageProtected){alert('Importação bloqueada: os dados locais não puderam ser lidos com segurança. Recupere o armazenamento antes de substituir qualquer cadastro.');return}$('importFile').click()};$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>8*1024*1024)throw Error('O arquivo excede o limite de 8 MB.');const d=JSON.parse(await f.text());if(!validData(d))throw Error('Formato inválido');if(storageProtected)throw Error('Armazenamento protegido: importação bloqueada para preservar dados anteriores.');const incoming={nodes:d.nodes,edges:d.edges};
  const originalIds=new Set(data.nodes.map(n=>n.id));
- const additions=incoming.nodes.filter(n=>!originalIds.has(n.id));
+ const incomingIds=new Set(incoming.nodes.map(n=>n.id));
+ const collisions=new Set(incoming.nodes.filter(n=>originalIds.has(n.id)&&n.id!=='central').map(n=>n.id));
+ // Um ID repetido pode representar outro núcleo no backup: nunca anexar seus filhos ao cadastro local homônimo.
+ const eligible=new Set(['central']);let changed=true;
+ while(changed){changed=false;for(const n of incoming.nodes){
+  if(originalIds.has(n.id)||eligible.has(n.id)||!eligible.has(n.parentId))continue;
+  eligible.add(n.id);changed=true;
+ }}
+ const additions=incoming.nodes.filter(n=>eligible.has(n.id)&&!originalIds.has(n.id));
+ const newIds=new Set(additions.map(n=>n.id));
  const existingEdges=new Set(data.edges.map(e=>JSON.stringify([e.from,e.to])));
- const allIds=new Set([...originalIds,...additions.map(n=>n.id)]);
- const newEdges=incoming.edges.filter(e=>{const key=JSON.stringify([e.from,e.to]);if(!allIds.has(e.from)||!allIds.has(e.to)||existingEdges.has(key))return false;existingEdges.add(key);return true});
+ const newEdges=incoming.edges.filter(e=>{
+  if(!((newIds.has(e.from)||e.from==='central')&&(newIds.has(e.to)||e.to==='central')))return false;
+  const key=JSON.stringify([e.from,e.to]);if(existingEdges.has(key))return false;
+  existingEdges.add(key);return true
+ });
+ const omitted=incoming.nodes.filter(n=>!originalIds.has(n.id)&&!newIds.has(n.id)).length;
  const merged={nodes:[...data.nodes,...additions],edges:[...data.edges,...newEdges]};
  if(!validData(merged))throw Error('A mesclagem excede os limites ou contém vínculos inválidos. Nenhum dado foi alterado.');
  if(!additions.length&&!newEdges.length){alert('O backup não contém novos núcleos ou vínculos. Os dados atuais foram preservados.');return}
- if(!confirm('Mesclar '+additions.length+' novos núcleos e '+newEdges.length+' vínculos? Os '+originalIds.size+' núcleos existentes serão preservados, inclusive quando houver IDs repetidos.'))return;
+ if(!confirm('Mesclar '+additions.length+' novos núcleos e '+newEdges.length+' vínculos? '+(collisions.size?'Há '+collisions.size+' IDs repetidos; ':'')+(omitted?omitted+' subnúcleos dependentes desses IDs serão ignorados para evitar vínculos incorretos. ':'')+'Os '+originalIds.size+' núcleos locais serão preservados.'))return;
  const previous=data;data=merged;if(!persist()){data=previous;throw Error('Não foi possível salvar a mesclagem. Os dados anteriores foram mantidos.')}
  current='central';selected='central';showInfo=false;render();fit();toast('Backup mesclado sem substituir cadastros existentes.');
  }catch(err){alert('Não foi possível importar: '+err.message)}finally{e.target.value=''}};
