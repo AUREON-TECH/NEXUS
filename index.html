@@ -43,7 +43,9 @@ const poNodes=[
 {id:'po-uniforme',name:'Uniforme',category:'gestao',parentId:'po',x:-210,y:-95,description:'Uso obrigatório de uniforme a partir de sábado, 07/11/2026.',items:['1ª ocorrência sem uniforme: acrescenta 1 casal à meta.','2ª ocorrência sem uniforme: acrescenta 2 casais à meta.','3ª ocorrência sem uniforme: acrescenta 3 casais à meta.','Conforme comunicado: se reclamar, vai para casa e acrescenta 5 casais à meta.']},
 {id:'po-faltas',name:'Faltar sem comunicar',category:'gestao',parentId:'po',x:220,y:-95,description:'Progressão indicada no comunicado para faltas sem comunicação.',items:['1ª falta: acrescenta 1 casal à meta.','2ª falta: acrescenta 2 casais à meta.','3ª falta: acrescenta 3 casais à meta.','4ª falta: acrescenta 4 casais à meta.','5ª falta: conforme comunicado, não trabalha até o final do mês.']},
 {id:'po-meeting',name:'Comer no meeting',category:'gestao',parentId:'po',x:0,y:210,description:'Regra comunicada para consumo de alimentos durante o meeting.',items:['Comer no meeting: acrescenta 1 casal à meta.']},
-{id:'po-informacoes-falsas',name:'Informações falsas do casal',category:'gestao',parentId:'po',x:230,y:210,description:'Quando o captador orientar o casal a mentir ou omitir informações durante a qualificação.',items:['1ª ocorrência comprovada: a meta de casais para o fixo dobra de 22 para 44 casais.','2ª ocorrência comprovada: conforme regra proposta, o captador deixa de receber o fixo.','Para recuperar o fixo: ficar no TOP 3 (1º, 2º ou 3º lugar) durante 2 meses consecutivos.','Apurar e documentar as ocorrências; validar penalidades e condições de remuneração com a gestão e o jurídico antes de aplicar.']}
+{id:'po-informacoes-falsas',name:'Informações falsas do casal',category:'gestao',parentId:'po',x:230,y:210,description:'Quando o captador orientar o casal a mentir ou omitir informações durante a qualificação.',items:['1ª ocorrência comprovada: a meta de casais para o fixo dobra de 22 para 44 casais.','2ª ocorrência comprovada: conforme regra proposta, o captador deixa de receber o fixo.','Para recuperar o fixo: ficar no TOP 3 (1º, 2º ou 3º lugar) durante 2 meses consecutivos.','Apurar e documentar as ocorrências; validar penalidades e condições de remuneração com a gestão e o jurídico antes de aplicar.']},
+{id:'po-rota-carro',name:'Rota do carro',category:'gestao',parentId:'po',x:-250,y:320,description:'Perda da rota do carro destinada ao deslocamento para o trabalho.',items:['1ª rota perdida: acrescenta 1 casal à meta.','2ª rota perdida: acrescenta 2 casais à meta.','3ª rota perdida: acrescenta 3 casais à meta.','A partir da 4ª ocorrência: acrescenta à meta o mesmo número de casais da ocorrência (4ª = +4, 5ª = +5 e assim por diante).','Registrar a ocorrência e validar a aplicação com a gestão.']},
+{id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'Quando o captador perde o horário, mas comunica o ocorrido, deve comparecer ao trabalho ciente do acréscimo de meta previsto.',items:['1ª ocorrência com aviso: comparece ao trabalho com acréscimo de 1 casal na meta.','2ª ocorrência com aviso: comparece ao trabalho com acréscimo de 2 casais na meta.','3ª ocorrência com aviso: comparece ao trabalho com acréscimo de 3 casais na meta.','A partir da 4ª ocorrência: acréscimo progressivo de 1 casal a cada reincidência (4ª = +4, 5ª = +5 e assim por diante).','Registrar o aviso e a ocorrência; validar a aplicação com a gestão.']}
 ];
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
@@ -81,6 +83,24 @@ if(!storageProtected){
    else try{localStorage.setItem(KEY,JSON.stringify(data))}catch{existing.items=oldItems;storageProtected=true}
   }
   if(!storageProtected){try{localStorage.setItem(FIXO_POLICY_MIGRATION,'1')}catch{}}
+ }
+}
+// Migração aditiva das regras de transporte e horário: não altera nós já cadastrados.
+const TRANSPORT_RULES_MIGRATION='aureon-nexus-po-transporte-horario-v1';
+if(!storageProtected){
+ let completed=false;try{completed=localStorage.getItem(TRANSPORT_RULES_MIGRATION)==='1'}catch{}
+ if(!completed&&data.nodes.some(n=>n.id==='po')){
+  const previous=deepCopy(data);
+  for(const id of ['po-rota-carro','po-horario-avisado']){
+   const rule=poNodes.find(n=>n.id===id);
+   if(rule&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(rule));
+   if(rule&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
+  }
+  if(!validData(data)){data=previous;storageProtected=true}
+  else{
+   try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(TRANSPORT_RULES_MIGRATION,'1')}catch{}}
+   catch{data=previous;storageProtected=true}
+  }
  }
 }
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
