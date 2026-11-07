@@ -54,7 +54,7 @@ holder.appendChild(btn('◎  Mapa principal','navitem'+(current==='central'?' ac
 for(const [id,c] of Object.entries(categories)){if(id==='central')continue;const matching=childrenOf('central').filter(n=>n.category===id);if(!matching.length)continue;const b=btn(c.icon+'  '+c.label+'  ('+matching.length+')','navitem',()=>{go('central');filter=id;render()});holder.appendChild(b)}
 if(current!=='central'){const h=document.createElement('p');h.className='eyebrow';h.textContent='NESTE NÚCLEO';holder.appendChild(h);for(const n of childrenOf(current))holder.appendChild(btn('○  '+n.name,'navitem',()=>go(n.id)))}
 }
-function matches(n){return !query||[n.name,n.description,...n.items].join(' ').toLocaleLowerCase('pt-BR').includes(query)}
+function matches(n){return !query||normalizeSearch([n.name,n.description,...n.items].join(' ')).includes(normalizeSearch(query))}
 function render(){nav();crumbs();toolsPanel();const center=nodeById(current);if(!center){go('central');return}
 $('pageTitle').textContent=current==='central'?'Mapa da Operação':center.name;
 $('addNodeTop').textContent=current==='central'?'+ Novo núcleo':'+ Novo subnúcleo';
