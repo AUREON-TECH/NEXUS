@@ -428,6 +428,16 @@ let analyticsRows=[],analyticsCosts={};
 try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_KEY)||'null');if(Array.isArray(saved)&&saved.length<10000&&saved.every(x=>Array.isArray(x)&&x.length===14&&typeof x[2]==='string'))analyticsRows=saved}catch{}
 try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_COSTS_KEY)||'null');if(saved&&typeof saved==='object'&&!Array.isArray(saved))analyticsCosts=saved}catch{}
 let anMonth='all',anRole='captador',anQuery='',anSelected='';
+async function loadHistoricalAnalytics(){
+ if(analyticsRows.length)return;
+ try{const response=await fetch('./historico-operacao.json?v=20261107',{cache:'no-store'});
+ if(!response.ok)throw Error('Histórico indisponível');
+ const dataset=await response.json(),rows=dataset.rows;
+ if(!Array.isArray(rows)||rows.length>10000||!rows.every(r=>Array.isArray(r)&&r.length===14&&/^20\\d{2}-\\d{2}$/.test(r[0])&&['captador','liner','closer'].includes(r[1])&&typeof r[2]==='string'&&r[2].length<=200&&r.slice(3).every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)))throw Error('Histórico inválido');
+ analyticsRows=rows;if(current==='inteligencia')renderAnalytics();
+ }catch(err){if(current==='inteligencia')toast('Histórico individual não carregado: use Importar CSV.')}
+}
+
 const anBRL=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(v||0);
 const anNum=v=>new Intl.NumberFormat('pt-BR').format(v||0);
 const anPct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
@@ -475,7 +485,17 @@ function renderAnalytics(){
  make('h2','',titles,'Inteligência de resultados');
  make('p','an-sub',titles,'Histórico TSExplorer • 01/11/2025 a 06/11/2026 • comparativos por profissional');
  const fileInput=make('input','',header);fileInput.type='file';fileInput.accept='.csv,text/csv';fileInput.hidden=true;
- const importBtn=btn('Importar CSV TSExplorer','btn primary',()=>fileInput.click());header.appendChild(importBtn);
+ const jsonInput=make('input','',header);jsonInput.type='file';jsonInput.accept='.json,application/json';jsonInput.hidden=true;
+ const importBtn=btn('Atualizar pelo CSV','btn primary',()=>fileInput.click());header.appendChild(importBtn);
+ header.appendChild(btn('Restaurar análise JSON','btn',()=>jsonInput.click()));
+ jsonInput.onchange=async()=>{const file=jsonInput.files?.[0];if(!file)return;
+ try{if(file.size>2*1024*1024)throw Error('JSON acima de 2 MB.');
+ const doc=JSON.parse(await file.text()),rows=doc.history||doc.rows;
+ if(!Array.isArray(rows)||rows.length>10000||!rows.every(r=>Array.isArray(r)&&r.length===14&&/^20\\d{2}-\\d{2}$/.test(r[0])&&['captador','liner','closer'].includes(r[1])&&typeof r[2]==='string'&&r.slice(3).every(v=>Number.isFinite(v)&&v>=0)))throw Error('Formato agregado inválido.');
+ if(!confirm('Importar '+rows.length+' registros agregados? Os núcleos e regras serão preservados.'))return;
+ if(!anSave(ANALYTICS_KEY,rows))return;analyticsRows=rows;anSelected='';renderAnalytics();toast('Histórico agregado restaurado.');
+ }catch(e){alert('Arquivo não importado: '+e.message)}finally{jsonInput.value=''}};
+
  fileInput.onchange=async()=>{const file=fileInput.files?.[0];if(!file)return;
  try{if(file.size>10*1024*1024)throw Error('Limite de 10 MB.');
  const bytes=await file.arrayBuffer(),decoder=new TextDecoder('windows-1252'),parsed=anImport(decoder.decode(bytes));
@@ -578,6 +598,6 @@ for(const id of ['modal','connectModal'])$(id).onclick=e=>{if(e.target===$(id))$
 $('exportMenu').onclick=()=>{if(storageProtected||!validData(data)){alert('Backup indisponível: os dados locais estão protegidos ou a estrutura atual é inválida. Preserve o cadastro original e revise os dados antes de exportar.');return}const blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 $('importMenu').onclick=()=>{if(storageProtected){alert('Importação bloqueada: os dados locais não puderam ser lidos com segurança. Recupere o armazenamento antes de substituir qualquer cadastro.');return}$('importFile').click()};$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>8*1024*1024)throw Error('O arquivo excede o limite de 8 MB.');const d=JSON.parse(await f.text());if(!validData(d))throw Error('Formato inválido');if(storageProtected)throw Error('Armazenamento protegido: importação bloqueada para preservar dados anteriores.');if(!confirm('IMPORTANTE: este backup substituirá todos os núcleos salvos neste navegador. Exporte primeiro um backup atual. Deseja continuar?'))return;const incoming={nodes:d.nodes,edges:d.edges};for(const n of incoming.nodes){if(n.id!=='central'&&!n.parentId)n.parentId='central'}const previous=data;data=incoming;if(!persist()){data=previous;throw Error('O navegador não conseguiu salvar o backup importado. Os dados anteriores foram mantidos.')}try{localStorage.setItem(MIGRATION,'1')}catch{}current='central';selected='central';showInfo=false;render();fit();toast('Backup importado e salvo com sucesso.')}catch(err){alert('Não foi possível importar: '+err.message)}finally{e.target.value=''}};
 $('menuBtn').onclick=()=>$('sidebar').classList.toggle('open');window.addEventListener('keydown',e=>{if(e.key==='Escape'){$('modal').classList.remove('show');$('connectModal').classList.remove('show');$('sidebar').classList.remove('open')}});
-options();render();fit();if(storageProtected){$('mapInfo').textContent='⚠ Armazenamento protegido: dados locais não carregados. Não edite nem substitua este cadastro.';$('mapInfo').style.color='#ffcf9e';$('mapInfo').style.borderColor='#a96d41'}window.addEventListener('resize',()=>{render();fit()});
+options();render();fit();loadHistoricalAnalytics();if(storageProtected){$('mapInfo').textContent='⚠ Armazenamento protegido: dados locais não carregados. Não edite nem substitua este cadastro.';$('mapInfo').style.color='#ffcf9e';$('mapInfo').style.borderColor='#a96d41'}window.addEventListener('resize',()=>{render();fit()});
 })();
 </script><div id="toast" class="toast" hidden role="status"></div></body></html>
