@@ -51,6 +51,22 @@ function validData(d){if(!d||!Array.isArray(d.nodes)||!Array.isArray(d.edges)||d
 let data;let storageProtected=false;try{const stored=localStorage.getItem(KEY);if(stored===null){data={nodes:deepCopy(initialNodes),edges:deepCopy(initialEdges)}}else{data=JSON.parse(stored);if(!validData(data))throw Error('invalid')}}catch{storageProtected=true;data={nodes:deepCopy(initialNodes),edges:deepCopy(initialEdges)}}
 for(const n of data.nodes){if(n.id!=='central'&&!n.parentId)n.parentId='central'}
 const MIGRATION='aureon-nexus-po-seeded-v1';let seeded=false;try{seeded=localStorage.getItem(MIGRATION)==='1'}catch{};if(!seeded&&!storageProtected){for(const n of poNodes)if(!data.nodes.some(x=>x.id===n.id))data.nodes.push(deepCopy(n));for(const n of poNodes)if(data.nodes.some(x=>x.id===n.id)&&data.nodes.some(x=>x.id===n.parentId)&&!data.edges.some(e=>e.from===n.parentId&&e.to===n.id))data.edges.push({from:n.parentId,to:n.id});try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(MIGRATION,'1')}catch{ /* Repetir a migração idempotente no próximo acesso. */ }}catch{storageProtected=true; /* Não permitir novas gravações se a migração não pôde ser persistida. */ }}
+// Migração incremental: acrescenta somente a nova regra, sem modificar os conteúdos existentes.
+const FIXO_RULE_MIGRATION='aureon-nexus-po-fixo-44-v1';
+if(!storageProtected){
+let installed=false;try{installed=localStorage.getItem(FIXO_RULE_MIGRATION)==='1'}catch{}
+if(!installed){
+ const rule=poNodes.find(n=>n.id==='po-informacoes-falsas');
+ if(rule&&data.nodes.some(n=>n.id==='po')&&!data.nodes.some(n=>n.id===rule.id)){
+   const prior=deepCopy(data);
+   data.nodes.push(deepCopy(rule));
+   if(!data.edges.some(e=>e.from==='po'&&e.to===rule.id))data.edges.push({from:'po',to:rule.id});
+   if(!validData(data)){data=prior;storageProtected=true}
+   else try{localStorage.setItem(KEY,JSON.stringify(data))}catch{data=prior;storageProtected=true}
+ }
+ if(!storageProtected){try{localStorage.setItem(FIXO_RULE_MIGRATION,'1')}catch{}}
+}
+}
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
 const $=id=>document.getElementById(id),svgNS='http://www.w3.org/2000/svg';
 function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a alteração não foi salva. Exporte um backup e revise os dados antes de continuar.');return false}if(storageProtected){alert('Dados anteriores inválidos ou armazenamento indisponível. Salvamento bloqueado para proteger o conteúdo original. Faça um backup e verifique o armazenamento.');return false}try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert('Não foi possível salvar neste navegador. Exporte um backup para evitar perda de dados.');return false}}
