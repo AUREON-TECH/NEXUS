@@ -536,7 +536,11 @@ function renderAnalytics(){
  const tr=make('tr','',table);for(const name of ['Profissional','Casais','Q','Vendas','Eficiência','VGV bruto','VGV ativo confirmado','Brindes estimados'])make('th','',tr,name);
  for(const r of ranked.slice(0,150)){const line=make('tr','',table);line.style.cursor='pointer';line.title='Clique para detalhar custos';line.onclick=()=>{anSelected=r.name;renderAnalytics()};
  for(const v of [r.name,anNum(r.att),anNum(r.q),anNum(r.sold),anPct(r.sold,r.att),anBRL(r.vgv),anBRL(r.net),anBRL(r.gifts)])make('td','',line,v)}
- make('p','an-caption',ranking,'Clique em um profissional para informar os custos reais. VGV ativo confirmado exclui linhas com status misto ou cancelado.');
+ make('p','an-caption',ranking,'Clique em um profissional para informar os custos. A coluna de VGV ativo confirmado exclui linhas sem status integralmente ATIVO.');
+ const alerts=ranked.filter(r=>r.att>=15&&(r.sold/r.att<.1||r.nq/r.att>.4||r.cancel/r.sold>.35)).slice(0,8);
+ if(alerts.length){
+  const alertBox=make('div','an-notice',ranking);alertBox.textContent='Pontos de atenção (critérios indicativos): '+alerts.map(r=>r.name+' — '+(r.sold/r.att<.1?'eficiência inferior a 10%':r.nq/r.att>.4?'NQ acima de 40%':'cancelamentos elevados')).join('; ')+'. Os casos exigem análise de contexto, não são avaliação disciplinar automática.';
+ }
  const selected=visible.find(r=>r.name===anSelected);
  if(selected){const panel=make('section','an-panel an-panel-wide',board);make('h3','',panel,'Custo do profissional — '+selected.name);
  const key=anMonth+'|'+anRole+'|'+selected.name,prior=analyticsCosts[key]||{},fields=[['fixo','Fixo / mínimo garantido'],['comissao','Comissões'],['ajuda','Ajuda de custo'],['spiff','Bônus / SPIFF'],['outros','Outros custos']];
@@ -544,7 +548,8 @@ function renderAnalytics(){
  for(const [field,label] of fields){const wrap=make('label','',inputGrid,label),input=make('input','',wrap);input.type='number';input.min=0;input.max=99999999;input.step='.01';input.value=prior[field]??'';inputs[field]=input}
  const sums=Object.values(prior).reduce((n,x)=>n+(Number(x)||0),0);
  make('p','an-caption',panel,anMonth==='all'?'Período completo: preencha custos acumulados de todo o histórico, não o valor de um único mês.':'Mês selecionado: preencha os custos referentes somente a esse mês.');
- make('p','an-notice',panel,'Brindes estimados pelo relatório: '+anBRL(selected.gifts)+' | Demais custos registrados: '+anBRL(sums)+' | Custo total estimado: '+anBRL(selected.gifts+sums)+' | Custo por casal: '+anBRL(selected.att?(selected.gifts+sums)/selected.att:0)+'. Não confundir VGV com lucro.');
+ const totalCost=selected.gifts+sums;
+ make('p','an-notice',panel,'Brindes estimados: '+anBRL(selected.gifts)+' | Outros custos informados: '+anBRL(sums)+' | Total: '+anBRL(totalCost)+' | Custo por casal: '+anBRL(selected.att?totalCost/selected.att:0)+' | Custo por atendimento com venda: '+(selected.sold?anBRL(totalCost/selected.sold):'—')+' | Custo / VGV ativo confirmado: '+anPct(totalCost,selected.net)+'. VGV não é lucro.');
  const actions=make('div','an-actions',panel);
  actions.appendChild(btn('Salvar custos','btn primary',()=>{const next={};for(const [k] of fields){const v=inputs[k].value;if(v&&!Number.isNaN(Number(v)))next[k]=Number(v)}const previous=analyticsCosts;analyticsCosts={...analyticsCosts,[key]:next};if(!anSave(ANALYTICS_COSTS_KEY,analyticsCosts)){analyticsCosts=previous;return}renderAnalytics();toast('Custos salvos neste navegador.')}));
  }}
