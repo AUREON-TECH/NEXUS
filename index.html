@@ -43,7 +43,7 @@ const poNodes=[
 {id:'po-uniforme',name:'Uniforme',category:'gestao',parentId:'po',x:-210,y:-95,description:'Uso obrigatório de uniforme a partir de sábado, 07/11/2026.',items:['1ª ocorrência sem uniforme: acrescenta 1 casal à meta.','2ª ocorrência sem uniforme: acrescenta 2 casais à meta.','3ª ocorrência sem uniforme: acrescenta 3 casais à meta.','Conforme comunicado: se reclamar, vai para casa e acrescenta 5 casais à meta.']},
 {id:'po-faltas',name:'Faltar sem comunicar',category:'gestao',parentId:'po',x:220,y:-95,description:'Progressão indicada no comunicado para faltas sem comunicação.',items:['1ª falta: acrescenta 1 casal à meta.','2ª falta: acrescenta 2 casais à meta.','3ª falta: acrescenta 3 casais à meta.','4ª falta: acrescenta 4 casais à meta.','5ª falta: conforme comunicado, não trabalha até o final do mês.']},
 {id:'po-meeting',name:'Comer no meeting',category:'gestao',parentId:'po',x:0,y:210,description:'Regra comunicada para consumo de alimentos durante o meeting.',items:['Comer no meeting: acrescenta 1 casal à meta.']},
-{id:'po-informacoes-falsas',name:'Informações falsas do casal',category:'gestao',parentId:'po',x:230,y:210,description:'Quando o captador orientar o casal a mentir ou omitir informações durante a qualificação.',items:['Conforme regra informada: a meta de casais para o fixo dobra de 22 para 44 casais.','Registrar e apurar a ocorrência antes da aplicação; validar a medida com a gestão e o jurídico.']}
+{id:'po-informacoes-falsas',name:'Informações falsas do casal',category:'gestao',parentId:'po',x:230,y:210,description:'Quando o captador orientar o casal a mentir ou omitir informações durante a qualificação.',items:['1ª ocorrência comprovada: a meta de casais para o fixo dobra de 22 para 44 casais.','2ª ocorrência comprovada: conforme regra proposta, o captador deixa de receber o fixo.','Para recuperar o fixo: ficar no TOP 3 (1º, 2º ou 3º lugar) durante 2 meses consecutivos.','Apurar e documentar as ocorrências; validar penalidades e condições de remuneração com a gestão e o jurídico antes de aplicar.']}
 ];
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
@@ -66,6 +66,22 @@ if(!installed){
  }
  if(!storageProtected){try{localStorage.setItem(FIXO_RULE_MIGRATION,'1')}catch{}}
 }
+}
+// Atualiza apenas o texto padrão anterior. Cadastros personalizados permanecem intactos.
+const FIXO_POLICY_MIGRATION='aureon-nexus-po-fixo-top3-v1';
+if(!storageProtected){
+ let completed=false;try{completed=localStorage.getItem(FIXO_POLICY_MIGRATION)==='1'}catch{}
+ if(!completed){
+  const existing=data.nodes.find(n=>n.id==='po-informacoes-falsas');
+  const previousDefault=['Conforme regra informada: a meta de casais para o fixo dobra de 22 para 44 casais.','Registrar e apurar a ocorrência antes da aplicação; validar a medida com a gestão e o jurídico.'];
+  if(existing&&JSON.stringify(existing.items)===JSON.stringify(previousDefault)){
+   const oldItems=existing.items.slice();
+   existing.items=poNodes.find(n=>n.id==='po-informacoes-falsas').items.slice();
+   if(!validData(data)){existing.items=oldItems;storageProtected=true}
+   else try{localStorage.setItem(KEY,JSON.stringify(data))}catch{existing.items=oldItems;storageProtected=true}
+  }
+  if(!storageProtected){try{localStorage.setItem(FIXO_POLICY_MIGRATION,'1')}catch{}}
+ }
 }
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
 const $=id=>document.getElementById(id),svgNS='http://www.w3.org/2000/svg';
