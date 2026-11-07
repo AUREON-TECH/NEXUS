@@ -284,7 +284,7 @@ function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a 
 function el(tag,attrs={},parent){const e=document.createElementNS(svgNS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.appendChild(e);return e}
 function textnode(parent,txt,attrs={}){const t=el('text',attrs,parent);t.textContent=txt;return t}
 function fit(){const rect=$('map').getBoundingClientRect();if(!rect.width||!rect.height)return;
- const kids=childrenOf(current).filter(n=>filter==='all'||n.category===filter);
+ const kids=childrenOf(current).filter(n=>(filter==='all'||n.category===filter)&&matches(n));
  const coordinates=[{x:0,y:0},...kids];
  const radius=83,minX=Math.min(...coordinates.map(n=>n.x))-radius,maxX=Math.max(...coordinates.map(n=>n.x))+radius;
  const minY=Math.min(...coordinates.map(n=>n.y))-radius,maxY=Math.max(...coordinates.map(n=>n.y))+radius;
@@ -469,11 +469,11 @@ function anMoney(v){
 function anGift(v){let result=0;const parts=String(v||'').matchAll(/VALOR:\s*(?:R\$\s*)?([\d.,]+)/gi);
  for(const m of parts){let str=m[1];if(str.includes('.')&&str.includes(','))str=str.replace(/\./g,'').replace(',','.');else str=str.replace(',','.');const x=Number(str);if(Number.isFinite(x))result+=x}return result}
 function anImport(text){
- const table=anCsvLines(text),headers=table.findIndex(row=>row[0]?.trim()==='Data de atendimento'&&row[1]?.trim()==='Promotor de marketing');
+ const table=anCsvLines(text.replace(/^\uFEFF/,'')),headers=table.findIndex(row=>row[0]?.trim()==='Data de atendimento'&&row[1]?.trim()==='Promotor de marketing');
  if(headers<0)throw Error('Colunas do TSExplorer não encontradas.');
- const acc=new Map(),months=new Set(),required=30;let valid=0;
- for(const r of table.slice(headers+1)){if(r.length<required||!/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(r[0]))continue;
- const [dd,mm,yy]=r[0].split('/').map(Number),date=new Date(yy,mm-1,dd);if(date.getDate()!==dd||date.getMonth()!==mm-1)continue;
+ const acc=new Map(),months=new Set(),required=30;let valid=0,skipped=0;
+ for(const r of table.slice(headers+1)){if(r.length<required||!/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(r[0])){skipped++;continue;}
+ const [dd,mm,yy]=r[0].split('/').map(Number),date=new Date(yy,mm-1,dd);if(date.getDate()!==dd||date.getMonth()!==mm-1||date.getFullYear()!==yy){skipped++;continue;}
  const month=yy+'-'+String(mm).padStart(2,'0'),gross=anMoney(r[14]);months.add(month);valid++;
  const qual=r[27].trim().toUpperCase(),notour=r[15].trim().toUpperCase()==='NOTOUR',status=r[16].toUpperCase().split('#').map(x=>x.trim()).filter(Boolean);
  const active=status.length>0&&status.every(x=>x==='ATIVO'),cancel=status.length>0&&status.every(x=>x==='CANCELADO'),mixed=status.length>0&&!active&&!cancel;
@@ -485,7 +485,7 @@ function anImport(text){
  }}
  if(valid===0)throw Error('Nenhum atendimento válido encontrado.');
  const result=[...acc.values()];if(result.length>10000)throw Error('Arquivo excede o limite de registros agregados.');
- return{result,valid,months:months.size}
+ return{result,valid,months:months.size,skipped}
 }
 function anDownload(filename,value){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
 function renderAnalytics(){
@@ -520,8 +520,11 @@ function renderAnalytics(){
 
  fileInput.onchange=async()=>{const file=fileInput.files?.[0];if(!file)return;
  try{if(file.size>10*1024*1024)throw Error('Limite de 10 MB.');
- const bytes=await file.arrayBuffer(),decoder=new TextDecoder('windows-1252'),parsed=anImport(decoder.decode(bytes));
- if(!confirm('Foram identificados '+parsed.valid+' atendimentos. Substituir somente a análise agregada anterior? Os núcleos, salas e regras do NEXUS serão preservados.'))return;
+ const bytes=await file.arrayBuffer();
+ const utf8=new TextDecoder('utf-8',{fatal:true}),legacy=new TextDecoder('windows-1252');
+ let decoded;try{decoded=utf8.decode(bytes)}catch{decoded=legacy.decode(bytes)}
+ const parsed=anImport(decoded);
+ if(!confirm('Foram identificados '+parsed.valid+' atendimentos'+(parsed.skipped?' e '+parsed.skipped+' linhas ignoradas':'')+'. Substituir somente a análise agregada anterior? Os núcleos, salas e regras do NEXUS serão preservados.'))return;
  if(!anSave(ANALYTICS_KEY,parsed.result))return;analyticsRows=parsed.result;analyticsDefaultSource=false;anSelected='';renderAnalytics();toast('Histórico atualizado com '+parsed.valid+' atendimentos.')}
  catch(e){alert('Importação não concluída: '+e.message)}finally{fileInput.value=''}};
  const filters=make('div','an-filters',board);
