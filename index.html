@@ -45,7 +45,9 @@ const poNodes=[
 {id:'po-meeting',name:'Comer no meeting',category:'gestao',parentId:'po',x:0,y:210,description:'Regra comunicada para consumo de alimentos durante o meeting.',items:['Comer no meeting: acrescenta 1 casal à meta.']},
 {id:'po-informacoes-falsas',name:'Informações falsas do casal',category:'gestao',parentId:'po',x:230,y:210,description:'Quando o captador orientar o casal a mentir ou omitir informações durante a qualificação.',items:['1ª ocorrência comprovada: a meta de casais para o fixo dobra de 22 para 44 casais.','2ª ocorrência comprovada: conforme regra proposta, o captador deixa de receber o fixo.','Para recuperar o fixo: ficar no TOP 3 (1º, 2º ou 3º lugar) durante 2 meses consecutivos.','Apurar e documentar as ocorrências; validar penalidades e condições de remuneração com a gestão e o jurídico antes de aplicar.']},
 {id:'po-rota-carro',name:'Rota do carro',category:'gestao',parentId:'po',x:-250,y:320,description:'Perda da rota do carro destinada ao deslocamento para o trabalho.',items:['1ª rota perdida: acrescenta 1 casal à meta.','2ª rota perdida: acrescenta 2 casais à meta.','3ª rota perdida: acrescenta 3 casais à meta.','A partir da 4ª ocorrência: acrescenta à meta o mesmo número de casais da ocorrência (4ª = +4, 5ª = +5 e assim por diante).','Registrar a ocorrência e validar a aplicação com a gestão.']},
-{id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'O captador deve avisar com pelo menos 1 hora de antecedência quando não conseguir cumprir o horário. Aviso no prazo não aumenta a meta.',items:['Avisou com 1 hora ou mais de antecedência: nenhum casal acrescentado à meta.','Avisou com menos de 1 hora de antecedência e perdeu o horário: 1ª ocorrência = +1 casal.','2ª ocorrência de aviso fora do prazo: +2 casais.','3ª ocorrência de aviso fora do prazo: +3 casais.','4ª ocorrência e seguintes de aviso fora do prazo: acréscimo progressivo conforme o número de ocorrências (+4, +5 e assim por diante).','Registrar o horário do aviso e o horário previsto de trabalho; validar qualquer medida com a gestão.']}
+{id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'O captador deve avisar com pelo menos 1 hora de antecedência quando não conseguir cumprir o horário. Aviso no prazo não aumenta a meta.',items:['Avisou com 1 hora ou mais de antecedência: nenhum casal acrescentado à meta.','Avisou com menos de 1 hora de antecedência e perdeu o horário: 1ª ocorrência = +1 casal.','2ª ocorrência de aviso fora do prazo: +2 casais.','3ª ocorrência de aviso fora do prazo: +3 casais.','4ª ocorrência e seguintes de aviso fora do prazo: acréscimo progressivo conforme o número de ocorrências (+4, +5 e assim por diante).','Registrar o horário do aviso e o horário previsto de trabalho; validar qualquer medida com a gestão.']},
+{id:'po-bebida-alcoolica',name:'Bebida alcoólica no trabalho',category:'gestao',parentId:'po',x:-200,y:470,description:'Consumo de bebida alcoólica durante o expediente ou atividades de trabalho.',items:['Conforme regra operacional proposta: consumir bebida alcoólica no trabalho acrescenta 5 casais à meta.','Registrar e apurar a ocorrência; validar a medida com a gestão e o jurídico antes da aplicação.']},
+{id:'po-conduta-ilicita',name:'Atos ilícitos e condutas proibidas',category:'gestao',parentId:'po',x:220,y:470,description:'Prática de atos ilícitos ou condutas expressamente proibidas no ambiente de trabalho.',items:['Condutas ilícitas ou proibidas são vedadas durante as atividades profissionais.','Conforme regra proposta: ocorrência comprovada pode resultar em distrato/encerramento contratual, após apuração e avaliação jurídica.','Preservar evidências, assegurar apuração adequada e formalizar qualquer decisão conforme o contrato e a legislação aplicável.']}
 ];
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
@@ -125,6 +127,22 @@ if(!storageProtected){
    }
   }
   if(!storageProtected){try{localStorage.setItem(HORARIO_UMA_HORA_MIGRATION,'1')}catch{}}
+ }
+}
+// Migração exclusivamente aditiva das novas regras de conduta; não altera regras editadas pelo usuário.
+const CONDUTA_PO_MIGRATION='aureon-nexus-po-conduta-v1';
+if(!storageProtected){
+ let complete=false;try{complete=localStorage.getItem(CONDUTA_PO_MIGRATION)==='1'}catch{}
+ if(!complete&&data.nodes.some(n=>n.id==='po')){
+  const before=deepCopy(data);
+  for(const id of ['po-bebida-alcoolica','po-conduta-ilicita']){
+   const rule=poNodes.find(n=>n.id===id);
+   if(rule&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(rule));
+   if(rule&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
+  }
+  if(!validData(data)){data=before;storageProtected=true}
+  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(CONDUTA_PO_MIGRATION,'1')}catch{}}
+  catch{data=before;storageProtected=true}
  }
 }
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
