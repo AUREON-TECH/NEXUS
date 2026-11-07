@@ -484,11 +484,17 @@ function renderAnalytics(){
  catch(e){alert('Importação não concluída: '+e.message)}finally{fileInput.value=''}};
  const filters=make('div','an-filters',board);
  const control=(label,items,value,fn)=>{const group=make('label','',filters,label),sel=make('select','',group);for(const [v,l] of items){const opt=make('option','',sel,l);opt.value=v}sel.value=value;sel.onchange=()=>fn(sel.value);return sel};
- const months=[...new Set(analyticsRows.length?analyticsRows.map(r=>r[0]):monthlySeed.map(r=>r[0]))].sort().reverse();
+ const months=[...new Set(analyticsRows.length?analyticsRows.map(r=>r[0]):monthlySeed.map(r=>r[0]))].sort().reverse();if(anMonth!=='all'&&!months.includes(anMonth))anMonth='all';
  control('Mês',[['all','Todo o histórico'],...months.map(m=>[m,m])],anMonth,v=>{anMonth=v;renderAnalytics()});
  control('Função',[['captador','Captadores'],['liner','Liners'],['closer','Closers']],anRole,v=>{anRole=v;anSelected='';renderAnalytics()});
  const searchGroup=make('label','',filters,'Profissional'),search=make('input','',searchGroup);search.type='search';search.placeholder='Buscar nome';search.value=anQuery;search.oninput=()=>{anQuery=search.value;renderAnalytics();const next=board.querySelector('.an-filters input');next?.focus();next?.setSelectionRange(anQuery.length,anQuery.length)};
- const monthly=monthlySeed.filter(r=>anMonth==='all'||r[0]===anMonth);
+ const currentMonthly=analyticsRows.length?(()=>{
+  const byMonth=new Map();
+  for(const r of analyticsRows){if(r[1]!=='captador')continue;const a=byMonth.get(r[0])||[r[0],0,0,0,0,0];
+   a[1]+=Number(r[3])||0;a[2]+=Number(r[4])||0;a[3]+=Number(r[7])||0;a[4]+=Number(r[11])||0;a[5]+=Number(r[8])||0;byMonth.set(r[0],a)}
+  return [...byMonth.values()].sort((a,b)=>a[0].localeCompare(b[0]));
+ })():monthlySeed;
+ const monthly=currentMonthly.filter(r=>anMonth==='all'||r[0]===anMonth);
  const sum=(i)=>monthly.reduce((n,r)=>n+r[i],0),attendance=sum(1),gross=sum(4),sold=sum(3),qualified=sum(2);
  const summary=make('div','an-kpis',board);
  for(const [label,value] of [['Atendimentos',anNum(attendance)],['VGV bruto',anBRL(gross)],['Atendimentos com venda',anNum(sold)],['Eficiência bruta',anPct(sold,attendance)]]){const c=make('div','an-kpi',summary);make('small','',c,label);make('strong','',c,value)}
@@ -496,7 +502,7 @@ function renderAnalytics(){
  make('h3','',chartPanel,'Evolução mensal do VGV bruto');
  const chart=make('div','an-chart',chartPanel),max=Math.max(...monthly.map(r=>r[4]),1);
  for(const r of monthly){const container=make('div','an-bar-wrap',chart),bar=make('div','an-bar',container);bar.style.height=Math.max(2,r[4]/max*140)+'px';bar.title=r[0]+' • '+anBRL(r[4]);make('small','',container,r[0].slice(5))}
- make('p','an-caption',chartPanel,'Base histórica incorporada: 5.089 atendimentos. A soma por captador, liner e closer não deve ser feita em conjunto.');
+ make('p','an-caption',chartPanel,analyticsRows.length?'Base do arquivo agregado importado. Os papéis não devem ser somados entre si.':'Base histórica incorporada: 5.089 atendimentos. A soma por captador, liner e closer não deve ser feita em conjunto.');
  const quality=make('section','an-panel',layout);make('h3','',quality,'Qualidade e contratos');
  const active=sum(5);for(const [label,value] of [['Qualificados (Q)',anNum(qualified)+' • '+anPct(qualified,attendance)],['Vendas com status integralmente ativo',anNum(active)],['Ticket médio bruto',anBRL(sold?gross/sold:0)]]){const card=make('div','an-kpi',quality);make('small','',card,label);make('strong','',card,value)}
  const ranking=make('section','an-panel an-panel-wide',board);make('h3','',ranking,'Ranking por profissional');
@@ -515,6 +521,7 @@ function renderAnalytics(){
  const inputGrid=make('div','an-cost-grid',panel),inputs={};
  for(const [field,label] of fields){const wrap=make('label','',inputGrid,label),input=make('input','',wrap);input.type='number';input.min=0;input.max=99999999;input.step='.01';input.value=prior[field]??'';inputs[field]=input}
  const sums=Object.values(prior).reduce((n,x)=>n+(Number(x)||0),0);
+ make('p','an-caption',panel,anMonth==='all'?'Período completo: preencha custos acumulados de todo o histórico, não o valor de um único mês.':'Mês selecionado: preencha os custos referentes somente a esse mês.');
  make('p','an-notice',panel,'Brindes estimados pelo relatório: '+anBRL(selected.gifts)+' | Demais custos registrados: '+anBRL(sums)+' | Custo total estimado: '+anBRL(selected.gifts+sums)+' | Custo por casal: '+anBRL(selected.att?(selected.gifts+sums)/selected.att:0)+'. Não confundir VGV com lucro.');
  const actions=make('div','an-actions',panel);
  actions.appendChild(btn('Salvar custos','btn primary',()=>{const next={};for(const [k] of fields){const v=inputs[k].value;if(v&&!Number.isNaN(Number(v)))next[k]=Number(v)}const previous=analyticsCosts;analyticsCosts={...analyticsCosts,[key]:next};if(!anSave(ANALYTICS_COSTS_KEY,analyticsCosts)){analyticsCosts=previous;return}renderAnalytics();toast('Custos salvos neste navegador.')}));
