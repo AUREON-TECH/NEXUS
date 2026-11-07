@@ -17,6 +17,30 @@
 .po-rule{display:flex;gap:10px;align-items:flex-start;margin:9px 0;padding:11px 12px;border-radius:9px;background:#0c192c;border:1px solid #263b57;color:#e1ebfa;font-size:12px;line-height:1.55;overflow-wrap:anywhere}.po-rule-mark{color:#8baeff;font-weight:800;flex:none}
 .po-card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}.po-note{border:1px solid #435273;border-radius:11px;padding:13px 16px;color:#a9b9d2;background:#15253b;font-size:12px;line-height:1.6;margin-top:17px}
 @media(max-width:760px){.po-board{top:205px;left:12px;right:12px;bottom:8px}.po-cards{grid-template-columns:1fr;gap:12px}.po-card{padding:16px}.po-head h2{font-size:25px}.po-head p{font-size:12px}.nucleus-tools{max-width:100%;left:12px;right:12px;top:132px;justify-content:flex-start}.workspace.po-mode .guide{display:none}}
+.workspace.po-mode #map{display:none!important}
+.workspace.po-mode .bottom{display:none!important}
+.po-board{z-index:5}
+.po-head{margin-bottom:14px}
+.po-head h2{font-size:clamp(22px,2.4vw,30px)}
+.po-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));gap:12px;align-items:start}
+.po-card{padding:0;min-height:108px;box-shadow:0 8px 22px #0003;overflow:hidden}
+.po-card details{width:100%}
+.po-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:104px;padding:16px}
+.po-card summary::-webkit-details-marker{display:none}
+.po-card summary:focus-visible{outline:2px solid #8eb7ff;outline-offset:-3px}
+.po-card summary:hover{background:#223752}
+.po-card .po-card-index{display:block;font-size:10px;letter-spacing:.7px;margin-bottom:9px}
+.po-card .po-card-title{display:block;font-size:14px;font-weight:750;color:#f4f7ff;line-height:1.35;overflow-wrap:anywhere}
+.po-card .po-expand{flex:none;color:#a9c7f5;font-size:12px}
+.po-card[open],.po-card.po-expanded{grid-column:1/-1}
+.po-card.po-expanded summary{min-height:64px;border-bottom:1px solid #344a68}
+.po-card.po-expanded .po-expand{transform:rotate(180deg)}
+.po-card-content{padding:16px 18px 18px}
+.po-card-content .po-card-desc{min-height:0;margin:0 0 12px;font-size:13px}
+.po-card-content .po-rule{margin:7px 0;padding:10px 12px}
+.po-card-content .po-card-actions{margin-top:14px}
+@media(max-width:760px){.po-board{top:205px}.po-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.po-card summary{padding:11px;min-height:98px}.po-card .po-card-title{font-size:12px}.po-card-content{padding:12px}.po-head{margin-bottom:12px}.po-head p{font-size:11px}}
+@media(max-width:360px){.po-cards{grid-template-columns:1fr}}
 .zoom .pill{display:grid;place-items:center;min-width:61px;color:#c3dafc;font-variant-numeric:tabular-nums}.zoom .btn{min-height:39px}.map .node text{font-family:Inter,ui-sans-serif,system-ui,sans-serif}@media(max-width:760px){.zoom .pill{min-width:46px;padding:8px}.zoom{gap:4px}.zoom .btn{font-size:11px}} </style></head><body>
 <div class="app"><aside class="side" id="sidebar"><div class="brand"><div class="logo">✧</div><div><b>NEXUS</b><small>OPERATIONAL INTELLIGENCE</small></div></div><p class="eyebrow">EXPLORAR</p><div id="filters"></div><p class="eyebrow">GESTÃO</p><button class="navitem" id="addNodeMenu">⊕ &nbsp; Adicionar elemento</button><button class="navitem" id="connectMenu">⤴ &nbsp; Criar conexão</button><button class="navitem" id="exportMenu">⇩ &nbsp; Exportar backup</button><button class="navitem" id="importMenu">⇧ &nbsp; Importar backup</button><input id="importFile" type="file" accept=".json,application/json" hidden><div class="footer">NEXUS • Central de comando<br>Dados deste dispositivo • v1.0<br><br>Para sincronização entre dispositivos, será necessário conectar um banco de dados e autenticação.</div></aside>
 <main class="workspace"><div class="toolbar"><button class="btn mobile-toggle" id="menuBtn" aria-label="Abrir menu de navegação">☰</button><div class="top-title"><h1 id="pageTitle">Mapa da Operação</h1><p>Explore relações, equipes, processos e decisões</p></div><input id="search" class="search" aria-label="Buscar núcleos, pessoas e processos" placeholder="⌕ Buscar em tudo..." autocomplete="off"><div id="searchResults" class="search-results" hidden></div><button class="btn primary" id="addNodeTop">+ Novo subnúcleo</button></div><div id="breadcrumbs" class="breadcrumbs"></div><div id="nucleusTools" class="nucleus-tools"></div><div id="nucleusSummary" class="nucleus-summary" hidden></div><div id="guide" class="guide">Clique em uma bolinha para entrar</div><section id="centerPanel" class="centerpanel" hidden></section><section id="poBoard" class="po-board" hidden tabindex="-1" aria-label="Regras do P.O"></section><svg id="map" class="map" aria-label="Mapa interativo da operação"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg><div class="bottom"><div class="pill" id="mapInfo">Arraste o mapa • Clique para explorar</div><div class="zoom"><button class="btn" id="minus" aria-label="Diminuir zoom">−</button><button class="btn" id="reset" title="Ajustar mapa à tela">Ajustar mapa</button><span class="pill" id="zoomLevel" aria-live="polite">100%</span><button class="btn" id="plus" aria-label="Aumentar zoom">+</button></div></div></main>
@@ -251,28 +275,39 @@ const on=current==='po',board=$('poBoard'),map=$('map'),summary=$('nucleusSummar
 document.querySelector('.workspace').classList.toggle('po-mode',on);
 board.hidden=!on;map.hidden=on;bottom.hidden=on;
 if(!on)return;
-summary.hidden=true;guide.hidden=true;$('centerPanel').hidden=true;board.replaceChildren();
+summary.hidden=true;guide.hidden=true;$('centerPanel').hidden=true;
+const opened=board.querySelector('.po-card details[open]')?.closest('.po-card')?.dataset.ruleId||null;
+board.replaceChildren();
 const head=document.createElement('header');head.className='po-head';board.appendChild(head);
 const eyebrow=document.createElement('div');eyebrow.className='po-eyebrow';eyebrow.textContent='PROCEDIMENTOS OPERACIONAIS';head.appendChild(eyebrow);
 const title=document.createElement('h2');title.textContent='Regras da operação';head.appendChild(title);
-const subtitle=document.createElement('p');subtitle.textContent='Leia as regras diretamente, sem abrir cada bolinha. Edite ou detalhe qualquer assunto pelo cartão.';head.appendChild(subtitle);
+const subtitle=document.createElement('p');subtitle.textContent='Selecione uma caixinha para ver a regra completa. Clique novamente para recolher.';head.appendChild(subtitle);
 const cards=document.createElement('div');cards.className='po-cards';board.appendChild(cards);
 const rules=childrenOf('po');
 for(const [index,n] of rules.entries()){
-const card=document.createElement('article');card.className='po-card';cards.appendChild(card);
-const top=document.createElement('div');top.className='po-card-top';card.appendChild(top);
-const num=document.createElement('span');num.className='po-card-index';num.textContent=n.id==='po-consumo-dia'?'INFORMATIVO • CONSUMO DO DIA':'REGRA '+String(index+1).padStart(2,'0');top.appendChild(num);
-top.appendChild(btn('✎ Editar','btn',()=>openNode(n)));
-const name=document.createElement('h3');name.textContent=n.name;card.appendChild(name);
-if(n.description){const description=document.createElement('p');description.className='po-card-desc';description.textContent=n.description;card.appendChild(description)}
-for(const item of n.items){const row=document.createElement('div');row.className='po-rule';const mark=document.createElement('span');mark.className='po-rule-mark';mark.textContent='•';const label=document.createElement('span');label.textContent=item;row.append(mark,label);card.appendChild(row)}
-if(!n.items.length){const empty=document.createElement('p');empty.className='hint';empty.textContent='Nenhuma regra cadastrada ainda.';card.appendChild(empty)}
-const actions=document.createElement('div');actions.className='po-card-actions';card.appendChild(actions);
-actions.appendChild(btn('Abrir detalhes','btn',()=>go(n.id)));
-actions.appendChild(btn('+ Subregra','btn',()=>{go(n.id);openNode(null)}));
+ const card=document.createElement('article');card.className='po-card';card.dataset.ruleId=n.id;cards.appendChild(card);
+ const details=document.createElement('details');card.appendChild(details);
+ const summaryButton=document.createElement('summary');details.appendChild(summaryButton);
+ const titleWrap=document.createElement('span');summaryButton.appendChild(titleWrap);
+ const num=document.createElement('span');num.className='po-card-index';num.textContent=n.id==='po-consumo-dia'?'INFORMATIVO':'REGRA '+String(index+1).padStart(2,'0');titleWrap.appendChild(num);
+ const name=document.createElement('span');name.className='po-card-title';name.textContent=n.name;titleWrap.appendChild(name);
+ const arrow=document.createElement('span');arrow.className='po-expand';arrow.textContent='▾';arrow.setAttribute('aria-hidden','true');summaryButton.appendChild(arrow);
+ const content=document.createElement('div');content.className='po-card-content';details.appendChild(content);
+ if(n.description){const description=document.createElement('p');description.className='po-card-desc';description.textContent=n.description;content.appendChild(description)}
+ for(const item of n.items){const row=document.createElement('div');row.className='po-rule';const mark=document.createElement('span');mark.className='po-rule-mark';mark.textContent='•';const label=document.createElement('span');label.textContent=item;row.append(mark,label);content.appendChild(row)}
+ if(!n.items.length){const empty=document.createElement('p');empty.className='hint';empty.textContent='Nenhuma regra cadastrada ainda.';content.appendChild(empty)}
+ const actions=document.createElement('div');actions.className='po-card-actions';content.appendChild(actions);
+ actions.appendChild(btn('✎ Editar','btn',()=>openNode(n)));
+ actions.appendChild(btn('Abrir detalhes','btn',()=>go(n.id)));
+ actions.appendChild(btn('+ Subregra','btn',()=>{go(n.id);openNode(null)}));
+ details.addEventListener('toggle',()=>{
+  card.classList.toggle('po-expanded',details.open);
+  if(details.open)for(const other of cards.querySelectorAll('.po-card details[open]'))if(other!==details)other.open=false;
+ });
+ if(n.id===opened){details.open=true;card.classList.add('po-expanded')}
 }
 if(!rules.length){const empty=document.createElement('div');empty.className='po-note';empty.textContent='Nenhuma regra cadastrada. Use “Novo filho” para criar.';board.appendChild(empty)}
-const note=document.createElement('p');note.className='po-note';note.textContent='Regras cadastradas conforme os comunicados recebidos. As penalidades e alterações de metas do fixo devem ser avaliadas pela gestão e pelo jurídico antes de aplicação.';board.appendChild(note);
+const note=document.createElement('p');note.className='po-note';note.textContent='As regras e eventuais penalidades devem observar a aprovação do Conselho de Captação e a validação contratual e jurídica aplicável.';board.appendChild(note);
 }
 function toolsPanel(){const root=$('nucleusTools');root.replaceChildren();const n=nodeById(current);if(!n)return;if(current==='po'){root.appendChild(btn('☷ Ver regras','btn',()=>{$('poBoard').scrollTo({top:0,behavior:'smooth'});$('poBoard').focus({preventScroll:true})}))}else root.appendChild(btn(showInfo?'✕ Fechar informações':'☷ Informações','btn',()=>{showInfo=!showInfo;render()}));root.appendChild(btn('✎ Editar núcleo','btn',()=>openNode(n)));if(current!=='central')root.appendChild(btn('← Voltar','btn',()=>go(n.parentId||'central')));if(current!=='central')root.appendChild(btn('Excluir núcleo','btn danger',()=>removeNode(current)));root.appendChild(btn('⊕ Novo filho','btn primary',()=>openNode(null)))}
 function detail(){const panel=$('centerPanel');panel.replaceChildren();const n=nodeById(current);if(!n)return;const children=childrenOf(current);
