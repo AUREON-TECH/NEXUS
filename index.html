@@ -433,7 +433,7 @@ async function loadHistoricalAnalytics(){
  try{const response=await fetch('./historico-operacao.json?v=20261107',{cache:'no-store'});
  if(!response.ok)throw Error('Histórico indisponível');
  const dataset=await response.json(),rows=dataset.rows;
- if(!Array.isArray(rows)||rows.length>10000||!rows.every(r=>Array.isArray(r)&&r.length===14&&/^20\\d{2}-\\d{2}$/.test(r[0])&&['captador','liner','closer'].includes(r[1])&&typeof r[2]==='string'&&r[2].length<=200&&r.slice(3).every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)))throw Error('Histórico inválido');
+ if(!Array.isArray(rows)||rows.length>10000||!rows.every(r=>Array.isArray(r)&&r.length===14&&/^20\d{2}-\d{2}$/.test(r[0])&&['captador','liner','closer'].includes(r[1])&&typeof r[2]==='string'&&r[2].length<=200&&r.slice(3).every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)))throw Error('Histórico inválido');
  analyticsRows=rows;if(current==='inteligencia')renderAnalytics();
  }catch(err){if(current==='inteligencia')toast('Histórico individual não carregado: use Importar CSV.')}
 }
