@@ -41,9 +41,25 @@
 .po-card-content .po-card-actions{margin-top:14px}
 @media(max-width:760px){.po-board{top:205px}.po-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.po-card summary{padding:11px;min-height:98px}.po-card .po-card-title{font-size:12px}.po-card-content{padding:12px}.po-head{margin-bottom:12px}.po-head p{font-size:11px}}
 @media(max-width:360px){.po-cards{grid-template-columns:1fr}}
+.workspace.rooms-mode #map,.workspace.rooms-mode .bottom{display:none!important}
+.rooms-board{position:absolute;z-index:5;top:205px;bottom:16px;left:24px;right:24px;overflow-y:auto;padding:0 4px 25px}
+.rooms-board[hidden]{display:none}
+.rooms-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.rooms-head h2{font-size:26px;margin:0 0 7px}.rooms-head p{font-size:13px;color:#9db6d5;margin:0}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:12px}
+.room-card{background:linear-gradient(145deg,#192f4b,#101d30);border:1px solid #3b5373;border-top:3px solid #73a8ff;border-radius:15px;padding:17px}
+.room-card h3{font-size:17px;margin:0 0 9px}.room-card p{font-size:12px;color:#a9bbd3;line-height:1.5}
+.room-count,.room-role{color:#96b5d9;font-size:12px;display:block;margin:10px 0}
+.room-actions{display:flex;gap:7px;flex-wrap:wrap}
+.room-form{display:grid;grid-template-columns:minmax(120px,2fr) minmax(110px,1fr) auto;gap:10px;align-items:end;background:#162840;border:1px solid #395678;border-radius:12px;padding:16px;margin-bottom:16px}
+.room-form label{font-size:12px;color:#9fbbdc;display:grid;gap:7px}
+.room-form input,.room-form select{width:100%;min-width:0;background:#0b1729;border:1px solid #395575;border-radius:9px;padding:11px;color:#fff}
+.room-form .btn{height:42px}.room-empty{padding:20px;border:1px dashed #45648b;border-radius:12px;color:#aac4e4}
+@media(max-width:760px){.rooms-board{top:205px;left:12px;right:12px}.rooms-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.room-card{padding:12px}.room-form{grid-template-columns:1fr}.room-form .btn{width:100%}}
+@media(max-width:420px){.rooms-grid{grid-template-columns:1fr}}
 .zoom .pill{display:grid;place-items:center;min-width:61px;color:#c3dafc;font-variant-numeric:tabular-nums}.zoom .btn{min-height:39px}.map .node text{font-family:Inter,ui-sans-serif,system-ui,sans-serif}@media(max-width:760px){.zoom .pill{min-width:46px;padding:8px}.zoom{gap:4px}.zoom .btn{font-size:11px}} </style></head><body>
 <div class="app"><aside class="side" id="sidebar"><div class="brand"><div class="logo">✧</div><div><b>NEXUS</b><small>OPERATIONAL INTELLIGENCE</small></div></div><p class="eyebrow">EXPLORAR</p><div id="filters"></div><p class="eyebrow">GESTÃO</p><button class="navitem" id="addNodeMenu">⊕ &nbsp; Adicionar elemento</button><button class="navitem" id="connectMenu">⤴ &nbsp; Criar conexão</button><button class="navitem" id="exportMenu">⇩ &nbsp; Exportar backup</button><button class="navitem" id="importMenu">⇧ &nbsp; Importar backup</button><input id="importFile" type="file" accept=".json,application/json" hidden><div class="footer">NEXUS • Central de comando<br>Dados deste dispositivo • v1.0<br><br>Para sincronização entre dispositivos, será necessário conectar um banco de dados e autenticação.</div></aside>
-<main class="workspace"><div class="toolbar"><button class="btn mobile-toggle" id="menuBtn" aria-label="Abrir menu de navegação">☰</button><div class="top-title"><h1 id="pageTitle">Mapa da Operação</h1><p>Explore relações, equipes, processos e decisões</p></div><input id="search" class="search" aria-label="Buscar núcleos, pessoas e processos" placeholder="⌕ Buscar em tudo..." autocomplete="off"><div id="searchResults" class="search-results" hidden></div><button class="btn primary" id="addNodeTop">+ Novo subnúcleo</button></div><div id="breadcrumbs" class="breadcrumbs"></div><div id="nucleusTools" class="nucleus-tools"></div><div id="nucleusSummary" class="nucleus-summary" hidden></div><div id="guide" class="guide">Clique em uma bolinha para entrar</div><section id="centerPanel" class="centerpanel" hidden></section><section id="poBoard" class="po-board" hidden tabindex="-1" aria-label="Regras do P.O"></section><svg id="map" class="map" aria-label="Mapa interativo da operação"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg><div class="bottom"><div class="pill" id="mapInfo">Arraste o mapa • Clique para explorar</div><div class="zoom"><button class="btn" id="minus" aria-label="Diminuir zoom">−</button><button class="btn" id="reset" title="Ajustar mapa à tela">Ajustar mapa</button><span class="pill" id="zoomLevel" aria-live="polite">100%</span><button class="btn" id="plus" aria-label="Aumentar zoom">+</button></div></div></main>
+<main class="workspace"><div class="toolbar"><button class="btn mobile-toggle" id="menuBtn" aria-label="Abrir menu de navegação">☰</button><div class="top-title"><h1 id="pageTitle">Mapa da Operação</h1><p>Explore relações, equipes, processos e decisões</p></div><input id="search" class="search" aria-label="Buscar núcleos, pessoas e processos" placeholder="⌕ Buscar em tudo..." autocomplete="off"><div id="searchResults" class="search-results" hidden></div><button class="btn primary" id="addNodeTop">+ Novo subnúcleo</button></div><div id="breadcrumbs" class="breadcrumbs"></div><div id="nucleusTools" class="nucleus-tools"></div><div id="nucleusSummary" class="nucleus-summary" hidden></div><div id="guide" class="guide">Clique em uma bolinha para entrar</div><section id="centerPanel" class="centerpanel" hidden></section><section id="poBoard" class="po-board" hidden tabindex="-1" aria-label="Regras do P.O"></section><section id="roomsBoard" class="rooms-board" hidden aria-label="Salas e equipes"></section><svg id="map" class="map" aria-label="Mapa interativo da operação"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg><div class="bottom"><div class="pill" id="mapInfo">Arraste o mapa • Clique para explorar</div><div class="zoom"><button class="btn" id="minus" aria-label="Diminuir zoom">−</button><button class="btn" id="reset" title="Ajustar mapa à tela">Ajustar mapa</button><span class="pill" id="zoomLevel" aria-live="polite">100%</span><button class="btn" id="plus" aria-label="Aumentar zoom">+</button></div></div></main>
 <aside class="detail" id="detail"></aside></div>
 <div class="modalback" id="modal"><form class="modal" id="nodeForm"><h2 id="modalTitle">Novo elemento</h2><label class="field">Nome<input name="name" required maxlength="80" placeholder="Ex.: Vila Natal"></label><label class="field">Categoria<select name="category" id="categorySelect"></select></label><label class="field">Descrição<textarea name="description" placeholder="Qual a função deste elemento?"></textarea></label><label class="field">Informações e processos (uma linha por item)<textarea name="items" placeholder="Responsável: Felipe&#10;Horário: 17h às 23h&#10;Processo de agendamento"></textarea></label><div class="formbuttons"><button type="button" class="btn" id="cancelModal">Cancelar</button><button type="submit" class="btn primary">Salvar elemento</button></div></form></div>
 <div class="modalback" id="connectModal"><form class="modal" id="connectForm"><h2>Criar conexão</h2><label class="field">Origem<select name="from" id="connFrom"></select></label><label class="field">Destino<select name="to" id="connTo"></select></label><div class="formbuttons"><button type="button" class="btn" id="cancelConnect">Cancelar</button><button class="btn primary">Conectar elementos</button></div></form></div>
@@ -252,7 +268,7 @@ function go(id){if(!nodeById(id))return;showInfo=childrenOf(id).length===0&&id!=
 function crumbs(){const r=$('breadcrumbs');r.replaceChildren();const path=[];let n=nodeById(current),limit=0;while(n&&limit++<30){path.unshift(n);n=nodeById(n.parentId)}for(const [i,item] of path.entries()){if(i){const sep=document.createElement('span');sep.textContent='›';sep.style.color='#6584a9';r.appendChild(sep)}r.appendChild(btn(item.name,'crumb',()=>go(item.id)))}}
 function nav(){const holder=$('filters');holder.replaceChildren();const back=current!=='central'?btn('← Voltar ao nível anterior','navitem',()=>go(nodeById(current)?.parentId||'central')):null;if(back)holder.appendChild(back);
 holder.appendChild(btn('◎  Mapa principal','navitem'+(current==='central'?' active':''),()=>go('central')));
-for(const [id,c] of Object.entries(categories)){if(id==='central')continue;const matching=childrenOf('central').filter(n=>n.category===id);if(!matching.length)continue;const b=btn(c.icon+'  '+c.label+'  ('+matching.length+')','navitem',()=>{go('central');filter=id;render()});holder.appendChild(b)}
+for(const [id,c] of Object.entries(categories)){if(id==='central')continue;const matching=childrenOf('central').filter(n=>n.category===id);if(!matching.length)continue;const b=btn(c.icon+'  '+c.label+'  ('+matching.length+')','navitem',()=>{if(matching.length===1)go(matching[0].id);else{go('central');filter=id;render();fit()}});holder.appendChild(b)}
 if(current!=='central'){const h=document.createElement('p');h.className='eyebrow';h.textContent='NESTE NÚCLEO';holder.appendChild(h);for(const n of childrenOf(current))holder.appendChild(btn('○  '+n.name,'navitem',()=>go(n.id)))}
 }
 function matches(n){return !query||normalizeSearch([n.name,n.description,...n.items].join(' ')).includes(normalizeSearch(query))}
@@ -269,7 +285,7 @@ const short=n.name.length>18?n.name.slice(0,17)+'…':n.name;textnode(g,short,{y
 g.addEventListener('pointerdown',ev=>{ev.stopPropagation();if(pointer)return;pointer={type:'node',id:n.id,pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY,ox:n.x,oy:n.y,center:central};moved=false;$('map').setPointerCapture(ev.pointerId)});
 g.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();if(central){showInfo=!showInfo;render()}else go(n.id)}})}
 $('mapInfo').textContent=storageProtected?'⚠ Armazenamento protegido: dados locais não carregados. Não edite nem substitua este cadastro.':kids.length+' subnúcleos • '+data.nodes.length+' elementos cadastrados';const summary=$('nucleusSummary');summary.replaceChildren();if(kids.length>0&&current!=='central'){summary.hidden=false;const name=document.createElement('strong');name.textContent=center.name;const desc=document.createElement('small');desc.textContent=center.description||'Clique nas bolinhas para explorar este núcleo.';summary.append(name,desc)}else summary.hidden=true;
-const leaf=kids.length===0&&current!=='central';$('map').classList.toggle('is-leaf',leaf);$('guide').hidden=leaf||kids.length===0;detail();renderPO()}
+const leaf=kids.length===0&&current!=='central';$('map').classList.toggle('is-leaf',leaf);$('guide').hidden=leaf||kids.length===0;detail();renderPO();renderRooms()}
 function renderPO(){
 const on=current==='po',board=$('poBoard'),map=$('map'),summary=$('nucleusSummary'),guide=$('guide'),bottom=document.querySelector('.bottom');
 document.querySelector('.workspace').classList.toggle('po-mode',on);
@@ -309,7 +325,69 @@ for(const [index,n] of rules.entries()){
 if(!rules.length){const empty=document.createElement('div');empty.className='po-note';empty.textContent='Nenhuma regra cadastrada. Use “Novo filho” para criar.';board.appendChild(empty)}
 const note=document.createElement('p');note.className='po-note';note.textContent='As regras e eventuais penalidades devem observar a aprovação do Conselho de Captação e a validação contratual e jurídica aplicável.';board.appendChild(note);
 }
-function toolsPanel(){const root=$('nucleusTools');root.replaceChildren();const n=nodeById(current);if(!n)return;if(current==='po'){root.appendChild(btn('☷ Ver regras','btn',()=>{$('poBoard').scrollTo({top:0,behavior:'smooth'});$('poBoard').focus({preventScroll:true})}))}else root.appendChild(btn(showInfo?'✕ Fechar informações':'☷ Informações','btn',()=>{showInfo=!showInfo;render()}));root.appendChild(btn('✎ Editar núcleo','btn',()=>openNode(n)));if(current!=='central')root.appendChild(btn('← Voltar','btn',()=>go(n.parentId||'central')));if(current!=='central')root.appendChild(btn('Excluir núcleo','btn danger',()=>removeNode(current)));root.appendChild(btn('⊕ Novo filho','btn primary',()=>openNode(null)))}
+function isRoomContext(){return current==='salas'||nodeById(current)?.parentId==='salas'}
+function renderRooms(){
+ const board=$('roomsBoard'),on=isRoomContext();
+ document.querySelector('.workspace').classList.toggle('rooms-mode',on);board.hidden=!on;
+ if(!on)return;
+ $('map').hidden=true;document.querySelector('.bottom').hidden=true;$('nucleusSummary').hidden=true;$('guide').hidden=true;$('centerPanel').hidden=true;board.replaceChildren();
+ const header=document.createElement('header');header.className='rooms-head';board.appendChild(header);
+ const intro=document.createElement('div');header.appendChild(intro);
+ const title=document.createElement('h2');intro.appendChild(title);
+ const sub=document.createElement('p');intro.appendChild(sub);
+ const content=document.createElement('div');board.appendChild(content);
+ const card=(entry,role,actions)=>{
+  const c=document.createElement('article');c.className='room-card';grid.appendChild(c);
+  const name=document.createElement('h3');name.textContent=entry.name;c.appendChild(name);
+  if(entry.description){const d=document.createElement('p');d.textContent=entry.description;c.appendChild(d)}
+  const count=document.createElement('span');count.className='room-count';count.textContent=role;c.appendChild(count);
+  const tools=document.createElement('div');tools.className='room-actions';c.appendChild(tools);
+  for(const [label,cls,action] of actions)tools.appendChild(btn(label,cls,action));
+ };
+ if(current==='salas'){
+  title.textContent='Salas e equipes';sub.textContent='Adicione salas e abra cada uma para cadastrar a equipe e suas funções.';
+  header.appendChild(btn('+ Adicionar sala','btn primary',()=>openNode(null,'salas')));
+  const rooms=childrenOf('salas');
+  if(!rooms.length){const p=document.createElement('p');p.className='room-empty';p.textContent='Nenhuma sala cadastrada. Clique em Adicionar sala (ex.: Dream House ou Romantic).';content.appendChild(p)}
+  const grid=document.createElement('div');grid.className='rooms-grid';content.appendChild(grid);
+  for(const n of rooms){const c=document.createElement('article');c.className='room-card';grid.appendChild(c);
+   const h=document.createElement('h3');h.textContent=n.name;c.appendChild(h);
+   if(n.description){const d=document.createElement('p');d.textContent=n.description;c.appendChild(d)}
+   const count=document.createElement('span');count.className='room-count';count.textContent=childrenOf(n.id).length+' profissional(is)';c.appendChild(count);
+   const a=document.createElement('div');a.className='room-actions';c.appendChild(a);
+   a.appendChild(btn('Abrir equipe','btn primary',()=>go(n.id)));a.appendChild(btn('Editar sala','btn',()=>openNode(n)));
+  }
+ }else{
+  const room=nodeById(current);title.textContent=room.name+' — equipe';sub.textContent='Cadastre os nomes e as funções da equipe desta sala.';
+  header.appendChild(btn('← Todas as salas','btn',()=>go('salas')));
+  const form=document.createElement('form');form.className='room-form';content.appendChild(form);
+  const nameLabel=document.createElement('label');nameLabel.textContent='Nome do profissional';form.appendChild(nameLabel);
+  const name=document.createElement('input');name.required=true;name.maxLength=80;name.placeholder='Nome completo';nameLabel.appendChild(name);
+  const roleLabel=document.createElement('label');roleLabel.textContent='Função';form.appendChild(roleLabel);
+  const role=document.createElement('select');roleLabel.appendChild(role);
+  for(const kind of ['Captador','Liner','Closer','FTB','Controller','Líder','Outro']){const option=document.createElement('option');option.value=kind;option.textContent=kind;role.appendChild(option)}
+  const add=btn('+ Adicionar pessoa','btn primary',()=>{});add.onclick=null;add.type='submit';form.appendChild(add);
+  form.onsubmit=e=>{e.preventDefault();if(storageProtected)return alert('Salvamento bloqueado para proteger seus dados.');
+   const full=name.value.trim();if(!full)return;
+   if(childrenOf(current).some(n=>n.name.toLocaleLowerCase('pt-BR')===full.toLocaleLowerCase('pt-BR')))return alert('Nome já cadastrado nesta sala.');
+   const previous=deepCopy(data),id='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),index=childrenOf(current).length;
+   data.nodes.push({id,name:full,category:'pessoas',parentId:current,description:'Função: '+role.value,items:[],x:Math.cos(index*2.4)*245,y:Math.sin(index*2.4)*165});
+   data.edges.push({from:current,to:id});
+   if(!persist()){data=previous;return}render();toast('Profissional cadastrado na sala.');
+  };
+  const members=childrenOf(current);
+  if(!members.length){const empty=document.createElement('p');empty.className='room-empty';empty.textContent='Equipe ainda vazia. Cadastre os profissionais no formulário acima.';content.appendChild(empty)}
+  const grid=document.createElement('div');grid.className='rooms-grid';content.appendChild(grid);
+  for(const n of members){const c=document.createElement('article');c.className='room-card';grid.appendChild(c);
+   const h=document.createElement('h3');h.textContent=n.name;c.appendChild(h);
+   const role=document.createElement('span');role.className='room-role';role.textContent=n.description||'Função não informada';c.appendChild(role);
+   const a=document.createElement('div');a.className='room-actions';c.appendChild(a);
+   a.appendChild(btn('Editar','btn',()=>openNode(n)));a.appendChild(btn('Detalhes','btn',()=>go(n.id)));a.appendChild(btn('Excluir','btn danger',()=>removeNode(n.id)));
+  }
+ }
+}
+
+function toolsPanel(){const root=$('nucleusTools');root.replaceChildren();const n=nodeById(current);if(!n)return;if(current==='po'){root.appendChild(btn('☷ Ver regras','btn',()=>{$('poBoard').scrollTo({top:0,behavior:'smooth'});$('poBoard').focus({preventScroll:true})}))}else if(isRoomContext()){root.appendChild(btn('▦ Salas e equipes','btn',()=>{$('roomsBoard').scrollTo({top:0,behavior:'smooth'})}))}else root.appendChild(btn(showInfo?'✕ Fechar informações':'☷ Informações','btn',()=>{showInfo=!showInfo;render()}));root.appendChild(btn('✎ Editar núcleo','btn',()=>openNode(n)));if(current!=='central')root.appendChild(btn('← Voltar','btn',()=>go(n.parentId||'central')));if(current!=='central')root.appendChild(btn('Excluir núcleo','btn danger',()=>removeNode(current)));root.appendChild(btn('⊕ Novo filho','btn primary',()=>openNode(null)))}
 function detail(){const panel=$('centerPanel');panel.replaceChildren();const n=nodeById(current);if(!n)return;const children=childrenOf(current);
 const show=showInfo&&current!=='po';panel.hidden=!show;if(!show)return;
 const c=categories[n.category],header=document.createElement('div');header.className='category';header.style.color=c.color;header.textContent='● '+c.label.toUpperCase();panel.appendChild(header);
@@ -328,7 +406,7 @@ function removeNode(id){if(id==='central')return;const n=nodeById(id);if(!n||!co
 const previous=deepCopy(data);data.nodes=data.nodes.filter(x=>!gone.has(x.id));data.edges=data.edges.filter(x=>!gone.has(x.from)&&!gone.has(x.to));if(!persist()){data=previous;return}go(n.parentId||'central')}
 function toast(message){const r=$('toast');r.textContent=message;r.hidden=false;setTimeout(()=>r.hidden=true,3200)}
 function btn(label,cls,fn){const b=document.createElement('button');b.className=cls;b.textContent=label;b.onclick=fn;return b}
-function openNode(n){editing=n?.id||null;$('modalTitle').textContent=n?'Editar elemento':'Novo elemento';const f=$('nodeForm');f.elements.name.value=n?.name||'';f.elements.category.value=n?.category==='central'?'pessoas':(n?.category||'pessoas');f.elements.category.disabled=!!n&&n.id==='central';f.elements.description.value=n?.description||'';f.elements.items.value=n?.items.join('\n')||'';$('modal').classList.add('show')}
+function openNode(n,categoryOverride){editing=n?.id||null;const category=categoryOverride||n?.category||(current==='salas'?'salas':nodeById(current)?.parentId==='salas'?'pessoas':'pessoas');$('modalTitle').textContent=n?'Editar elemento':category==='salas'?'Adicionar sala':isRoomContext()?'Adicionar profissional':'Novo elemento';const f=$('nodeForm');f.elements.name.value=n?.name||'';f.elements.category.value=n?.category==='central'?'pessoas':category;f.elements.category.disabled=!!n&&n.id==='central';f.elements.description.value=n?.description||'';f.elements.items.value=n?.items.join('\n')||'';$('modal').classList.add('show')}
 function options(){const sel=$('categorySelect');for(const [k,v] of Object.entries(categories)){if(k==='central')continue;const o=document.createElement('option');o.value=k;o.textContent=v.label;sel.appendChild(o)}}
 $('nodeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget,fd=new FormData(f),name=String(fd.get('name')).trim();if(!name)return;const node=data.nodes.find(n=>n.id===editing);const previous=deepCopy(data);
 if(node){node.name=name;node.category=node.id==='central'?'central':String(fd.get('category'));node.description=String(fd.get('description')).trim();node.items=String(fd.get('items')).split('\n').map(s=>s.trim()).filter(Boolean)}
