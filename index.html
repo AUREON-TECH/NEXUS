@@ -48,7 +48,8 @@ const poNodes=[
 {id:'po-horario-avisado',name:'Perdeu o horário e avisou',category:'gestao',parentId:'po',x:0,y:350,description:'O captador deve avisar com pelo menos 1 hora de antecedência quando não conseguir cumprir o horário. Aviso no prazo não aumenta a meta.',items:['Avisou com 1 hora ou mais de antecedência: nenhum casal acrescentado à meta.','Avisou com menos de 1 hora de antecedência e perdeu o horário: 1ª ocorrência = +1 casal.','2ª ocorrência de aviso fora do prazo: +2 casais.','3ª ocorrência de aviso fora do prazo: +3 casais.','4ª ocorrência e seguintes de aviso fora do prazo: acréscimo progressivo conforme o número de ocorrências (+4, +5 e assim por diante).','Registrar o horário do aviso e o horário previsto de trabalho; validar qualquer medida com a gestão.']},
 {id:'po-bebida-alcoolica',name:'Bebida alcoólica no trabalho',category:'gestao',parentId:'po',x:-200,y:470,description:'Consumo de bebida alcoólica durante o expediente ou atividades de trabalho.',items:['Conforme regra operacional proposta: consumir bebida alcoólica no trabalho acrescenta 5 casais à meta.','Registrar e apurar a ocorrência; validar a medida com a gestão e o jurídico antes da aplicação.']},
 {id:'po-conduta-ilicita',name:'Atos ilícitos e condutas proibidas',category:'gestao',parentId:'po',x:220,y:470,description:'Prática de atos ilícitos ou condutas expressamente proibidas no ambiente de trabalho.',items:['Condutas ilícitas ou proibidas são vedadas durante as atividades profissionais.','Conforme regra proposta: ocorrência comprovada pode resultar em distrato/encerramento contratual, após apuração e avaliação jurídica.','Preservar evidências, assegurar apuração adequada e formalizar qualquer decisão conforme o contrato e a legislação aplicável.']},
-{id:'po-consumo-dia',name:'Consumo do dia — organização e limpeza',category:'gestao',parentId:'po',x:0,y:600,description:'Orientações informativas para manter o ambiente de trabalho organizado e limpo durante e após refeições e lanches.',items:['Manter o ambiente de trabalho limpo, organizado e adequado para a equipe e os clientes.','Não deixar marmitas, restos de comida, copos ou embalagens espalhados nas salas e nos pontos de trabalho.','Após consumir alimentos ou bebidas, recolher os resíduos, descartá-los nos locais apropriados e deixar o espaço limpo.','Orientação informativa sobre o consumo do dia: sem acréscimo de casais e sem penalidade vinculada a este aviso.']}
+{id:'po-consumo-dia',name:'Consumo do dia — organização e limpeza',category:'gestao',parentId:'po',x:0,y:600,description:'Orientações informativas para manter o ambiente de trabalho organizado e limpo durante e após refeições e lanches.',items:['Manter o ambiente de trabalho limpo, organizado e adequado para a equipe e os clientes.','Não deixar marmitas, restos de comida, copos ou embalagens espalhados nas salas e nos pontos de trabalho.','Após consumir alimentos ou bebidas, recolher os resíduos, descartá-los nos locais apropriados e deixar o espaço limpo.','Orientação informativa sobre o consumo do dia: sem acréscimo de casais e sem penalidade vinculada a este aviso.']},
+{id:'po-retorno-profissional',name:'Retorno de ex-profissionais',category:'gestao',parentId:'po',x:245,y:615,description:'Critérios internos propostos para avaliar a readmissão ou nova contratação de profissionais que saíram da empresa.',items:['Desligamento por conduta inadequada ou irregularidade: poderá ser avaliado para retorno somente após 12 meses, mediante validação expressa da gestão.','Saída por iniciativa do profissional, em boas condições e com as portas abertas: poderá ser avaliado para retorno após 6 meses.','Em eventual retorno, a proposta é não oferecer mínimo garantido nem antecipação ou adiantamento de comissão.','Nenhum retorno é automático: depende de nova análise da gestão, condições contratuais e validação jurídica.','Respeitar a legislação aplicável, os direitos remuneratórios obrigatórios e eventuais acordos vigentes.']}
 ];
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
@@ -157,6 +158,19 @@ if(!storageProtected){
   if(entry&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
   if(!validData(data)){data=previous;storageProtected=true}
   else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(CONSUMO_DIA_MIGRATION,'1')}catch{}}
+  catch{data=previous;storageProtected=true}
+ }
+}
+// Migração aditiva e idempotente: novo procedimento de retorno de ex-profissionais.
+const RETORNO_PO_MIGRATION='aureon-nexus-po-retorno-profissional-v1';
+if(!storageProtected){
+ let done=false;try{done=localStorage.getItem(RETORNO_PO_MIGRATION)==='1'}catch{}
+ if(!done&&data.nodes.some(n=>n.id==='po')){
+  const previous=deepCopy(data),id='po-retorno-profissional',rule=poNodes.find(n=>n.id===id);
+  if(rule&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(rule));
+  if(rule&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
+  if(!validData(data)){data=previous;storageProtected=true}
+  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(RETORNO_PO_MIGRATION,'1')}catch{}}
   catch{data=previous;storageProtected=true}
  }
 }
