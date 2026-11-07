@@ -459,7 +459,7 @@ function anMoney(v){
  const n=Number(raw);return Number.isFinite(n)?n:0
 }
 function anGift(v){let result=0;const parts=String(v||'').matchAll(/VALOR:\s*(?:R\$\s*)?([\d.,]+)/gi);
- for(const m of parts){let str=m[1];if(str.includes('.')&&str.includes(','))str=str.replace(/\./g,'').replace(',','.');else str=str.replace(',','.');const x=Number(str);if(Number.isFinite(x))result+=x}return result}
+ for(const m of parts){const x=anMoney(m[1]);if(Number.isFinite(x)&&x>=0)result+=x}return result}
 function anImport(text){
  const table=anCsvLines(text.replace(/^\uFEFF/,'')),headers=table.findIndex(row=>row[0]?.trim()==='Data de atendimento'&&row[1]?.trim()==='Promotor de marketing');
  if(headers<0)throw Error('Colunas do TSExplorer não encontradas.');
