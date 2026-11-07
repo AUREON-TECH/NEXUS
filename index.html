@@ -423,10 +423,11 @@ function renderRooms(){
 }
 
 const ANALYTICS_KEY='nexus-performance-aggregated-v1',ANALYTICS_COSTS_KEY='nexus-performance-costs-v1';
-const monthlySeed=[["2025-11",165,126,22,17557966,7],["2025-12",456,341,59,7262281,24],["2026-01",402,289,42,5719941,23],["2026-02",275,200,28,3236000,16],["2026-03",349,246,55,5890734,22],["2026-04",411,303,70,8794780,32],["2026-05",438,285,84,10239064,44],["2026-06",488,331,75,10362620,37],["2026-07",734,543,104,15162876,54],["2026-08",395,271,76,9482310,48],["2026-09",455,300,75,8961590,42],["2026-10",449,299,73,7382302,51],["2026-11",72,47,19,2336300,19]];
+const monthlySeed=[["2025-11",165,126,22,17557966,7,1333800],["2025-12",456,341,59,7262281,24,2555280.54],["2026-01",402,289,42,5719941,23,2738551.08],["2026-02",275,200,28,3236000,16,1880000],["2026-03",349,246,55,5890734,22,2186986.08],["2026-04",411,303,70,8794780,32,4504698],["2026-05",438,285,84,10239064,44,5884320],["2026-06",488,331,75,10362620,37,5370600],["2026-07",734,543,104,15162876,54,7636000],["2026-08",395,271,76,9482310,48,6774534.16],["2026-09",455,300,75,8961590,42,4523150],["2026-10",449,299,73,7382302,51,5154348],["2026-11",72,47,19,2336300,19,2336300]];
 let analyticsRows=[],analyticsCosts={};
 try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_KEY)||'null');if(Array.isArray(saved)&&saved.length<10000&&saved.every(x=>Array.isArray(x)&&x.length===14&&typeof x[2]==='string'))analyticsRows=saved}catch{}
 try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_COSTS_KEY)||'null');if(saved&&typeof saved==='object'&&!Array.isArray(saved))analyticsCosts=saved}catch{}
+let analyticsDefaultSource=false;
 let anMonth='all',anRole='captador',anQuery='',anSelected='';
 async function loadHistoricalAnalytics(){
  if(analyticsRows.length)return;
@@ -434,7 +435,7 @@ async function loadHistoricalAnalytics(){
  if(!response.ok)throw Error('Histórico indisponível');
  const dataset=await response.json(),rows=dataset.rows;
  if(!Array.isArray(rows)||rows.length>10000||!rows.every(r=>Array.isArray(r)&&r.length===14&&/^20\d{2}-\d{2}$/.test(r[0])&&['captador','liner','closer'].includes(r[1])&&typeof r[2]==='string'&&r[2].length<=200&&r.slice(3).every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)))throw Error('Histórico inválido');
- analyticsRows=rows;if(current==='inteligencia')renderAnalytics();
+ analyticsRows=rows;analyticsDefaultSource=true;if(current==='inteligencia')renderAnalytics();
  }catch(err){if(current==='inteligencia')toast('Histórico individual não carregado: use Importar CSV.')}
 }
 
@@ -493,14 +494,14 @@ function renderAnalytics(){
  const doc=JSON.parse(await file.text()),rows=doc.history||doc.rows;
  if(!Array.isArray(rows)||rows.length>10000||!rows.every(r=>Array.isArray(r)&&r.length===14&&/^20\d{2}-\d{2}$/.test(r[0])&&['captador','liner','closer'].includes(r[1])&&typeof r[2]==='string'&&r.slice(3).every(v=>Number.isFinite(v)&&v>=0)))throw Error('Formato agregado inválido.');
  if(!confirm('Importar '+rows.length+' registros agregados? Os núcleos e regras serão preservados.'))return;
- if(!anSave(ANALYTICS_KEY,rows))return;analyticsRows=rows;anSelected='';renderAnalytics();toast('Histórico agregado restaurado.');
+ if(!anSave(ANALYTICS_KEY,rows))return;analyticsRows=rows;analyticsDefaultSource=false;anSelected='';renderAnalytics();toast('Histórico agregado restaurado.');
  }catch(e){alert('Arquivo não importado: '+e.message)}finally{jsonInput.value=''}};
 
  fileInput.onchange=async()=>{const file=fileInput.files?.[0];if(!file)return;
  try{if(file.size>10*1024*1024)throw Error('Limite de 10 MB.');
  const bytes=await file.arrayBuffer(),decoder=new TextDecoder('windows-1252'),parsed=anImport(decoder.decode(bytes));
  if(!confirm('Foram identificados '+parsed.valid+' atendimentos. Substituir somente a análise agregada anterior? Os núcleos, salas e regras do NEXUS serão preservados.'))return;
- if(!anSave(ANALYTICS_KEY,parsed.result))return;analyticsRows=parsed.result;anSelected='';renderAnalytics();toast('Histórico atualizado com '+parsed.valid+' atendimentos.')}
+ if(!anSave(ANALYTICS_KEY,parsed.result))return;analyticsRows=parsed.result;analyticsDefaultSource=false;anSelected='';renderAnalytics();toast('Histórico atualizado com '+parsed.valid+' atendimentos.')}
  catch(e){alert('Importação não concluída: '+e.message)}finally{fileInput.value=''}};
  const filters=make('div','an-filters',board);
  const control=(label,items,value,fn)=>{const group=make('label','',filters,label),sel=make('select','',group);for(const [v,l] of items){const opt=make('option','',sel,l);opt.value=v}sel.value=value;sel.onchange=()=>fn(sel.value);return sel};
@@ -508,16 +509,17 @@ function renderAnalytics(){
  control('Mês',[['all','Todo o histórico'],...months.map(m=>[m,m])],anMonth,v=>{anMonth=v;renderAnalytics()});
  control('Função',[['captador','Captadores'],['liner','Liners'],['closer','Closers']],anRole,v=>{anRole=v;anSelected='';renderAnalytics()});
  const searchGroup=make('label','',filters,'Profissional'),search=make('input','',searchGroup);search.type='search';search.placeholder='Buscar nome';search.value=anQuery;search.oninput=()=>{anQuery=search.value;renderAnalytics();const next=board.querySelector('.an-filters input');next?.focus();next?.setSelectionRange(anQuery.length,anQuery.length)};
- const currentMonthly=analyticsRows.length?(()=>{
+ const currentMonthly=analyticsRows.length&&!analyticsDefaultSource?(()=>{
   const byMonth=new Map();
   for(const r of analyticsRows){if(r[1]!=='captador')continue;const a=byMonth.get(r[0])||[r[0],0,0,0,0,0];
-   a[1]+=Number(r[3])||0;a[2]+=Number(r[4])||0;a[3]+=Number(r[7])||0;a[4]+=Number(r[11])||0;a[5]+=Number(r[8])||0;byMonth.set(r[0],a)}
+   a[1]+=Number(r[3])||0;a[2]+=Number(r[4])||0;a[3]+=Number(r[7])||0;a[4]+=Number(r[11])||0;a[5]+=Number(r[8])||0;a[6]=(a[6]||0)+(Number(r[12])||0);byMonth.set(r[0],a)}
   return [...byMonth.values()].sort((a,b)=>a[0].localeCompare(b[0]));
  })():monthlySeed;
  const monthly=currentMonthly.filter(r=>anMonth==='all'||r[0]===anMonth);
  const sum=(i)=>monthly.reduce((n,r)=>n+r[i],0),attendance=sum(1),gross=sum(4),sold=sum(3),qualified=sum(2);
  const summary=make('div','an-kpis',board);
- for(const [label,value] of [['Atendimentos',anNum(attendance)],['VGV bruto',anBRL(gross)],['Atendimentos com venda',anNum(sold)],['Eficiência bruta',anPct(sold,attendance)]]){const c=make('div','an-kpi',summary);make('small','',c,label);make('strong','',c,value)}
+ const knownActive=monthly.every(r=>r.length>6)?monthly.reduce((n,r)=>n+r[6],0):null;
+ for(const [label,value] of [['Atendimentos',anNum(attendance)],['VGV bruto (inclui cancelados)',anBRL(gross)],['VGV ativo confirmado',knownActive===null?'—':anBRL(knownActive)],['Atendimentos com venda',anNum(sold)],['Eficiência bruta',anPct(sold,attendance)]]){const c=make('div','an-kpi',summary);make('small','',c,label);make('strong','',c,value)}
  const layout=make('div','an-layout',board),chartPanel=make('section','an-panel',layout);
  make('h3','',chartPanel,'Evolução mensal do VGV bruto');
  const chart=make('div','an-chart',chartPanel),max=Math.max(...monthly.map(r=>r[4]),1);
@@ -548,6 +550,7 @@ function renderAnalytics(){
  }}
  const footer=make('div','an-actions',board);
  footer.appendChild(btn('Exportar backup da análise','btn',()=>anDownload('nexus-desempenho-backup.json',{version:1,history:analyticsRows,costs:analyticsCosts})));
+ if(analyticsDefaultSource)make('p','an-notice',board,'ALERTA DE CONCILIAÇÃO: em 05/11/2025 há um registro cancelado de R$ 14.677.365,69 sem promotor identificado. Ele integra o VGV bruto da base geral, mas não o ranking individual. Verifique também contratos com status misto ou de revisão.');
  make('p','an-notice',board,'Fonte: TSExplorer — Controle de sala. Os custos fixos, comissões e bônus não constam na planilha, portanto precisam ser preenchidos. Valores de brindes são estimativas extraídas das descrições. Contratos com status misto não entram no VGV ativo confirmado. Dados agregados salvos apenas neste navegador.');
 }
 
