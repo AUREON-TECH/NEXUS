@@ -280,7 +280,21 @@ if(!storageProtected){
 }
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
 const $=id=>document.getElementById(id),svgNS='http://www.w3.org/2000/svg';
-function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a alteração não foi salva. Exporte um backup e revise os dados antes de continuar.');return false}if(storageProtected){alert('Dados anteriores inválidos ou armazenamento indisponível. Salvamento bloqueado para proteger o conteúdo original. Faça um backup e verifique o armazenamento.');return false}try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert('Não foi possível salvar neste navegador. Exporte um backup para evitar perda de dados.');return false}}
+// Controle de concorrência: nunca substituir alterações de outra aba sem recarregar.
+let lastKnownStored=null;
+try{lastKnownStored=localStorage.getItem(KEY)}catch{storageProtected=true}
+window.addEventListener('storage',event=>{
+ if(event.key!==KEY||event.storageArea!==localStorage||event.newValue===lastKnownStored)return;
+ storageProtected=true;
+ const info=$('mapInfo');if(info){info.textContent='⚠ Dados modificados em outra aba. Recarregue a página antes de editar para não perder alterações.';info.style.color='#ffcf9e'}
+ toast('Outra aba atualizou o NEXUS. Edição bloqueada até recarregar.');
+});
+function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a alteração não foi salva. Exporte um backup e revise os dados antes de continuar.');return false}if(storageProtected){alert('Dados anteriores inválidos ou armazenamento indisponível. Salvamento bloqueado para proteger o conteúdo original. Faça um backup e verifique o armazenamento.');return false}try{
+ const latest=localStorage.getItem(KEY);
+ if(latest!==lastKnownStored){storageProtected=true;alert('O NEXUS foi alterado em outra aba. Esta edição não foi salva para preservar o cadastro mais recente. Recarregue a página.');return false}
+ const serialized=JSON.stringify(data);
+ localStorage.setItem(KEY,serialized);lastKnownStored=serialized;return true
+ }catch(e){alert('Não foi possível salvar neste navegador. Exporte um backup para evitar perda de dados.');return false}}
 function el(tag,attrs={},parent){const e=document.createElementNS(svgNS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.appendChild(e);return e}
 function textnode(parent,txt,attrs={}){const t=el('text',attrs,parent);t.textContent=txt;return t}
 function fit(){const rect=$('map').getBoundingClientRect();if(!rect.width||!rect.height)return;
