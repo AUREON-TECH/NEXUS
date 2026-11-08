@@ -289,6 +289,24 @@ window.addEventListener('storage',event=>{
  const info=$('mapInfo');if(info){info.textContent='⚠ Dados modificados em outra aba. Recarregue a página antes de editar para não perder alterações.';info.style.color='#ffcf9e'}
  toast('Outra aba atualizou o NEXUS. Edição bloqueada até recarregar.');
 });
+// Detecta alterações em outra aba também após o navegador móvel suspender esta página.
+function verifyStoredVersion(){
+ if(storageProtected)return false;
+ try{
+  if(localStorage.getItem(KEY)===lastKnownStored)return true;
+  storageProtected=true;
+  const info=$('mapInfo');
+  if(info){info.textContent='⚠ Outra aba alterou os dados. Recarregue antes de editar.';info.style.color='#ffcf9e';info.style.borderColor='#a96d41'}
+  toast('Dados atualizados em outra aba. Edição bloqueada para preservar seus cadastros.');
+  return false;
+ }catch{
+  storageProtected=true;
+  toast('Armazenamento indisponível. Edição bloqueada para evitar perda de dados.');
+  return false;
+ }
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)verifyStoredVersion()});
+window.addEventListener('pageshow',event=>{if(event.persisted)verifyStoredVersion()});
 function persist(){if(!validData(data)){alert('Limite ou estrutura inválida: a alteração não foi salva. Exporte um backup e revise os dados antes de continuar.');return false}if(storageProtected){alert('Dados anteriores inválidos ou armazenamento indisponível. Salvamento bloqueado para proteger o conteúdo original. Faça um backup e verifique o armazenamento.');return false}try{
  const latest=localStorage.getItem(KEY);
  if(latest!==lastKnownStored){storageProtected=true;alert('O NEXUS foi alterado em outra aba. Esta edição não foi salva para preservar o cadastro mais recente. Recarregue a página.');return false}
