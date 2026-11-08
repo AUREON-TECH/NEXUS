@@ -453,7 +453,7 @@ try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_KEY)||'null');if(Array
 try{const saved=JSON.parse(localStorage.getItem(ANALYTICS_COSTS_KEY)||'null');if(saved&&typeof saved==='object'&&!Array.isArray(saved))analyticsCosts=saved}catch{}
 let analyticsDefaultSource=false;
 let anMonth='all',anRole='captador',anQuery='',anSelected='';
-async function loadHistoricalAnalytics(){
+async async function loadHistoricalAnalytics(){
  if(analyticsRows.length)return;
  try{const response=await fetch('./historico-operacao.json?v=20261107',{cache:'no-store'});
  if(!response.ok)throw Error('Histórico indisponível');
