@@ -284,7 +284,7 @@ const $=id=>document.getElementById(id),svgNS='http://www.w3.org/2000/svg';
 let lastKnownStored=null;
 try{lastKnownStored=localStorage.getItem(KEY)}catch{storageProtected=true}
 window.addEventListener('storage',event=>{
- if(event.key!==KEY||event.storageArea!==localStorage||event.newValue===lastKnownStored)return;
+ if((event.key!==KEY&&event.key!==null)||event.storageArea!==localStorage||event.newValue===lastKnownStored)return;
  storageProtected=true;
  const info=$('mapInfo');if(info){info.textContent='⚠ Dados modificados em outra aba. Recarregue a página antes de editar para não perder alterações.';info.style.color='#ffcf9e'}
  toast('Outra aba atualizou o NEXUS. Edição bloqueada até recarregar.');
