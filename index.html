@@ -141,9 +141,18 @@ const poNodes=[
 const initialEdges=['salas','pontos','pessoas','processos','resultados','estrategia','gestao','sistemas'].map(to=>({from:'central',to})).concat([{from:'pessoas',to:'gestao'},{from:'pontos',to:'processos'},{from:'processos',to:'resultados'},{from:'resultados',to:'estrategia'},{from:'resultados',to:'sistemas'}]);
 const deepCopy=x=>JSON.parse(JSON.stringify(x));
 function validData(d){if(!d||!Array.isArray(d.nodes)||!Array.isArray(d.edges)||d.nodes.length>500||d.edges.length>3000)return false;const ids=new Set();for(const n of d.nodes){if(!n||typeof n.id!=='string'||!n.id||ids.has(n.id)||typeof n.name!=='string'||n.name.length>200||!categories[n.category]||!Number.isFinite(n.x)||!Number.isFinite(n.y)||!Array.isArray(n.items)||n.items.length>300||n.items.some(v=>typeof v!=='string'||v.length>5000))return false;ids.add(n.id)}if(!ids.has('central'))return false;const root=d.nodes.find(n=>n.id==='central');if(root.parentId||root.category!=='central')return false;for(const n of d.nodes){if(n.id!=='central'&&n.parentId!=null&&(typeof n.parentId!=='string'||!n.parentId))return false;if(n.description!=null&&(typeof n.description!=='string'||n.description.length>20000))return false;if(Math.abs(n.x)>1000000||Math.abs(n.y)>1000000)return false}const lookup=new Map(d.nodes.map(n=>[n.id,n]));for(const n of d.nodes){if(n.parentId&&(!ids.has(n.parentId)||n.parentId===n.id))return false;const visited=new Set();let p=n;while(p&&p.parentId){if(visited.has(p.id))return false;visited.add(p.id);p=lookup.get(p.parentId);if(!p)return false}}return d.edges.every(e=>e&&typeof e.from==='string'&&typeof e.to==='string'&&ids.has(e.from)&&ids.has(e.to)&&e.from!==e.to)}
-let data;let storageProtected=false;try{const stored=localStorage.getItem(KEY);if(stored===null){data={nodes:deepCopy(initialNodes),edges:deepCopy(initialEdges)}}else{data=JSON.parse(stored);if(!validData(data))throw Error('invalid')}}catch{storageProtected=true;data={nodes:deepCopy(initialNodes),edges:deepCopy(initialEdges)}}
+let data;let storageProtected=false;let migrationStoredSnapshot=null;try{const stored=localStorage.getItem(KEY);migrationStoredSnapshot=stored;if(stored===null){data={nodes:deepCopy(initialNodes),edges:deepCopy(initialEdges)}}else{data=JSON.parse(stored);if(!validData(data))throw Error('invalid')}}catch{storageProtected=true;data={nodes:deepCopy(initialNodes),edges:deepCopy(initialEdges)}}
+// As migrações aditivas só gravam se nenhuma outra aba alterou o cadastro desde a leitura.
+function persistMigrationSafely(){
+ if(storageProtected)throw Error('Armazenamento protegido');
+ const latest=localStorage.getItem(KEY);
+ if(latest!==migrationStoredSnapshot){storageProtected=true;throw Error('Cadastro alterado em outra aba durante migração')}
+ const serialized=JSON.stringify(data);
+ localStorage.setItem(KEY,serialized);
+ migrationStoredSnapshot=serialized;
+}
 for(const n of data.nodes){if(n.id!=='central'&&!n.parentId)n.parentId='central'}
-const MIGRATION='aureon-nexus-po-seeded-v1';let seeded=false;try{seeded=localStorage.getItem(MIGRATION)==='1'}catch{};if(!seeded&&!storageProtected){const before=deepCopy(data);for(const n of poNodes)if(!data.nodes.some(x=>x.id===n.id))data.nodes.push(deepCopy(n));for(const n of poNodes)if(data.nodes.some(x=>x.id===n.id)&&data.nodes.some(x=>x.id===n.parentId)&&!data.edges.some(e=>e.from===n.parentId&&e.to===n.id))data.edges.push({from:n.parentId,to:n.id});if(!validData(data)){data=before;storageProtected=true}else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(MIGRATION,'1')}catch{ /* Repetir a migração idempotente no próximo acesso. */ }}catch{data=before;storageProtected=true; /* Não permitir novas gravações se a migração não pôde ser persistida. */ }}
+const MIGRATION='aureon-nexus-po-seeded-v1';let seeded=false;try{seeded=localStorage.getItem(MIGRATION)==='1'}catch{};if(!seeded&&!storageProtected){const before=deepCopy(data);for(const n of poNodes)if(!data.nodes.some(x=>x.id===n.id))data.nodes.push(deepCopy(n));for(const n of poNodes)if(data.nodes.some(x=>x.id===n.id)&&data.nodes.some(x=>x.id===n.parentId)&&!data.edges.some(e=>e.from===n.parentId&&e.to===n.id))data.edges.push({from:n.parentId,to:n.id});if(!validData(data)){data=before;storageProtected=true}else try{persistMigrationSafely();try{localStorage.setItem(MIGRATION,'1')}catch{ /* Repetir a migração idempotente no próximo acesso. */ }}catch{data=before;storageProtected=true; /* Não permitir novas gravações se a migração não pôde ser persistida. */ }}
 // Migração incremental: acrescenta somente a nova regra, sem modificar os conteúdos existentes.
 const FIXO_RULE_MIGRATION='aureon-nexus-po-fixo-44-v1';
 if(!storageProtected){
@@ -155,7 +164,7 @@ if(!installed){
    data.nodes.push(deepCopy(rule));
    if(!data.edges.some(e=>e.from==='po'&&e.to===rule.id))data.edges.push({from:'po',to:rule.id});
    if(!validData(data)){data=prior;storageProtected=true}
-   else try{localStorage.setItem(KEY,JSON.stringify(data))}catch{data=prior;storageProtected=true}
+   else try{persistMigrationSafely()}catch{data=prior;storageProtected=true}
  }
  if(!storageProtected){try{localStorage.setItem(FIXO_RULE_MIGRATION,'1')}catch{}}
 }
@@ -171,7 +180,7 @@ if(!storageProtected){
    const oldItems=existing.items.slice();
    existing.items=poNodes.find(n=>n.id==='po-informacoes-falsas').items.slice();
    if(!validData(data)){existing.items=oldItems;storageProtected=true}
-   else try{localStorage.setItem(KEY,JSON.stringify(data))}catch{existing.items=oldItems;storageProtected=true}
+   else try{persistMigrationSafely()}catch{existing.items=oldItems;storageProtected=true}
   }
   if(!storageProtected){try{localStorage.setItem(FIXO_POLICY_MIGRATION,'1')}catch{}}
  }
@@ -189,7 +198,7 @@ if(!storageProtected){
   }
   if(!validData(data)){data=previous;storageProtected=true}
   else{
-   try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(TRANSPORT_RULES_MIGRATION,'1')}catch{}}
+   try{persistMigrationSafely();try{localStorage.setItem(TRANSPORT_RULES_MIGRATION,'1')}catch{}}
    catch{data=previous;storageProtected=true}
   }
  }
@@ -211,7 +220,7 @@ if(!storageProtected){
     if(matchItems)existing.items=template.items.slice();
     if(matchDesc)existing.description=template.description;
     if(!validData(data)){existing.items=priorItems;existing.description=priorDesc;storageProtected=true}
-    else try{localStorage.setItem(KEY,JSON.stringify(data))}
+    else try{persistMigrationSafely()}
     catch{existing.items=priorItems;existing.description=priorDesc;storageProtected=true}
    }
   }
@@ -230,7 +239,7 @@ if(!storageProtected){
    if(rule&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
   }
   if(!validData(data)){data=before;storageProtected=true}
-  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(CONDUTA_PO_MIGRATION,'1')}catch{}}
+  else try{persistMigrationSafely();try{localStorage.setItem(CONDUTA_PO_MIGRATION,'1')}catch{}}
   catch{data=before;storageProtected=true}
  }
 }
@@ -244,7 +253,7 @@ if(!storageProtected){
   if(entry&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(entry));
   if(entry&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
   if(!validData(data)){data=previous;storageProtected=true}
-  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(CONSUMO_DIA_MIGRATION,'1')}catch{}}
+  else try{persistMigrationSafely();try{localStorage.setItem(CONSUMO_DIA_MIGRATION,'1')}catch{}}
   catch{data=previous;storageProtected=true}
  }
 }
@@ -257,7 +266,7 @@ if(!storageProtected){
   if(rule&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(rule));
   if(rule&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
   if(!validData(data)){data=previous;storageProtected=true}
-  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(RETORNO_PO_MIGRATION,'1')}catch{}}
+  else try{persistMigrationSafely();try{localStorage.setItem(RETORNO_PO_MIGRATION,'1')}catch{}}
   catch{data=previous;storageProtected=true}
  }
 }
@@ -270,7 +279,7 @@ if(!storageProtected){
   if(rule&&!data.nodes.some(n=>n.id===id))data.nodes.push(deepCopy(rule));
   if(rule&&data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='po'&&e.to===id))data.edges.push({from:'po',to:id});
   if(!validData(data)){data=previous;storageProtected=true}
-  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(CONSELHO_PO_MIGRATION,'1')}catch{}}
+  else try{persistMigrationSafely();try{localStorage.setItem(CONSELHO_PO_MIGRATION,'1')}catch{}}
   catch{data=previous;storageProtected=true}
  }
 }
@@ -285,7 +294,7 @@ if(!storageProtected){
    const items=["Reunião ordinária do Conselho de Captação: todo dia 1º de cada mês.","Todos os integrantes devem levar sua própria agenda ou pauta, com propostas, assuntos pendentes e pontos de decisão.","Na reunião, registrar as pautas apresentadas, os votos individuais, as deliberações e os responsáveis pelos encaminhamentos."];
    for(const item of items)if(!conselho.items.includes(item))conselho.items.push(item);
    if(!validData(data)){data=before;storageProtected=true}
-   else try{localStorage.setItem(KEY,JSON.stringify(data))}catch{data=before;storageProtected=true}
+   else try{persistMigrationSafely()}catch{data=before;storageProtected=true}
   }
   if(!storageProtected){try{localStorage.setItem(CONSELHO_AGENDA_MIGRATION,'1')}catch{}}
  }
@@ -299,7 +308,7 @@ if(!storageProtected){
   if(!data.nodes.some(n=>n.id===id))data.nodes.push({id,name:'INTELIGÊNCIA',category:'resultados',parentId:'central',x:0,y:-385,description:'Dashboard histórico de produtividade, qualidade, vendas e custos por profissional.',items:['Histórico do TSExplorer: novembro de 2025 a novembro de 2026.','Dados de clientes não são exibidos nem armazenados no dashboard.']});
   if(data.nodes.some(n=>n.id===id)&&!data.edges.some(e=>e.from==='central'&&e.to===id))data.edges.push({from:'central',to:id});
   if(!validData(data)){data=before;storageProtected=true}
-  else try{localStorage.setItem(KEY,JSON.stringify(data));try{localStorage.setItem(ANALYTICS_NODE_MIGRATION,'1')}catch{}}catch{data=before;storageProtected=true}
+  else try{persistMigrationSafely();try{localStorage.setItem(ANALYTICS_NODE_MIGRATION,'1')}catch{}}catch{data=before;storageProtected=true}
  }
 }
 let showInfo=false,current='central',selected='central',filter='all',query='',editing=null,scale=1,tx=0,ty=0,pointer=null,moved=false;
