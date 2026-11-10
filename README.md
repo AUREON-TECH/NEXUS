@@ -2,6 +2,13 @@
 
 Aplicativo estático hospedado via GitHub Pages. Os cadastros criados no navegador são locais ao perfil e à origem (domínio) utilizados; publicar uma versão nova do HTML **não** sincroniza nem recupera automaticamente esses dados em outros dispositivos.
 
+## Repositório canônico e publicação
+
+- A consulta à API GitHub em 10/11/2026 retornou o mesmo ID de repositório (`1448283511`) para `raphaelbuenocaptacao-creator/NEXUS` e `AUREON-TECH/NEXUS`. O nome canônico atual é **`AUREON-TECH/NEXUS`**, na branch `main`. O endereço antigo é resolvido pela API para o repositório transferido; isso **não comprova** redirecionamento ou funcionamento do GitHub Pages.
+- Repositório: https://github.com/AUREON-TECH/NEXUS
+- Endereço Pages a verificar na configuração de Pages: https://aureon-tech.github.io/NEXUS/ . O endereço antigo https://raphaelbuenocaptacao-creator.github.io/NEXUS/ não deve ser considerado publicado sem teste HTTP/navegador.
+- **Atenção aos cadastros:** `localStorage` é separado por origem. Mesmo que o código seja idêntico, dados salvos no domínio antigo não aparecem automaticamente no domínio novo. Antes de orientar qualquer mudança de endereço, exporte os dois backups no domínio original e teste a importação em perfil isolado. Nunca apague chaves locais nem sobrescreva registros existentes.
+
 ## Backups antes de alterações
 
 1. No navegador onde os cadastros estão salvos, abra **Exportar backup** no menu de gestão e guarde o JSON em local seguro.
