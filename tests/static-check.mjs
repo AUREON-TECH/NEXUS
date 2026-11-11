@@ -30,4 +30,18 @@ for (const [i, row] of historical.rows.entries()) {
     throw Error(`Histórico: linha ${i + 1} inválida`);
   }
 }
+
+// Cobertura de regressão para recursos essenciais, sem ler nem modificar cadastros locais.
+const essentialFeatures = [
+  ['navegação por mapa SVG', /<svg\b[^>]*\bid=["']map["']/i],
+  ['painel P.O', /\bclass=["'][^"']*\bpo-board\b/i],
+  ['responsividade móvel', /@media\s*\(max-width:\s*760px\)/i],
+  ['persistência local', /\blocalStorage\b/],
+  ['resultados de busca', /\bid=["']searchResults["']/i],
+  ['importação de backup', /\bid=["']importFile["']/i]
+];
+for (const [feature, pattern] of essentialFeatures) {
+  if (!pattern.test(html)) throw Error(`Recurso essencial ausente: ${feature}`);
+}
+
 console.log(`Validação estática OK: ${checked} script(s), elementos essenciais e ${historical.rows.length} linhas de histórico.`);
