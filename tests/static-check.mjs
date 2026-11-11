@@ -44,4 +44,20 @@ for (const [feature, pattern] of essentialFeatures) {
   if (!pattern.test(html)) throw Error(`Recurso essencial ausente: ${feature}`);
 }
 
+
+// Proteções contra regressões que possam apagar cadastros locais ou executar código arbitrário.
+// São verificações estáticas; não substituem testes funcionais de backup/restauração.
+const unsafePatterns = [
+  ['limpeza de todo o armazenamento local', /\blocalStorage\s*\.\s*clear\s*\(/],
+  ['remoção direta de chaves locais', /\blocalStorage\s*\.\s*removeItem\s*\(/],
+  ['execução de código via eval', /\beval\s*\(/],
+  ['execução de código via new Function', /\bnew\s+Function\s*\(/]
+];
+for (const [risk, pattern] of unsafePatterns) {
+  if (pattern.test(html)) throw Error(`Regressão de segurança detectada: ${risk}`);
+}
+if (!/function\s+escapeHtml\s*\(/.test(html)) {
+  throw Error('Proteção de texto HTML ausente: escapeHtml');
+}
+
 console.log(`Validação estática OK: ${checked} script(s), elementos essenciais e ${historical.rows.length} linhas de histórico.`);
