@@ -60,4 +60,11 @@ if (!/function\s+escapeHtml\s*\(/.test(html)) {
   throw Error('Proteção de texto HTML ausente: escapeHtml');
 }
 
+
+// Impede regressão de injeção HTML na lista de conexões do mapa.
+const connectSource = html.match(/function\s+connectOpen\s*\(\)\s*\{([\s\S]*?)\}\s*function\s+escapeHtml\s*\(/)?.[1];
+if (!connectSource || !/escapeHtml\s*\(\s*n\.id\s*\)/.test(connectSource) || !/escapeHtml\s*\(\s*n\.name\s*\)/.test(connectSource)) {
+  throw Error('Conexões: identificador ou nome sem escape HTML');
+}
+
 console.log(`Validação estática OK: ${checked} script(s), elementos essenciais e ${historical.rows.length} linhas de histórico.`);
