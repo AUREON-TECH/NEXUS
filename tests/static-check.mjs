@@ -14,12 +14,12 @@ for (const [, attrs, code] of scripts) {
   }
 }
 if (!checked) throw Error('Nenhum JavaScript inline validado');
-for (const id of ['map', 'mapInfo', 'nucleusSummary']) {
-  if (!new RegExp(`\\bid=["']${id}["']`).test(html)) throw Error(`Elemento essencial ausente: ${id}`);
-}
-// Inspeciona somente o HTML estático; IDs em templates JavaScript não são elementos DOM.
+// Inspeciona somente HTML estático, evitando falsos positivos em templates JavaScript.
 const staticMarkup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '').replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '');
 const staticIds = [...staticMarkup.matchAll(/\bid\s*=\s*(["'])([^"']+)\1/gi)].map(match => match[2]);
+for (const id of ['map', 'mapInfo', 'nucleusSummary', 'search', 'searchResults', 'exportMenu', 'importMenu', 'importFile']) {
+  if (!staticIds.includes(id)) throw Error(`Elemento essencial ausente no HTML: ${id}`);
+}
 const repeatedIds = [...new Set(staticIds.filter((id, index) => staticIds.indexOf(id) !== index))];
 if (repeatedIds.length) throw Error(`IDs HTML estáticos duplicados: ${repeatedIds.join(', ')}`);
 const historical = JSON.parse(readFileSync(new URL('../historico-operacao.json', import.meta.url), 'utf8'));
