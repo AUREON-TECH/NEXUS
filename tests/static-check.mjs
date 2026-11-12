@@ -25,10 +25,18 @@ if (repeatedIds.length) throw Error(`IDs HTML estáticos duplicados: ${repeatedI
 const historical = JSON.parse(readFileSync(new URL('../historico-operacao.json', import.meta.url), 'utf8'));
 if (!Array.isArray(historical.rows)) throw Error('Histórico: rows ausente');
 if (historical.rows.length > 10000) throw Error('Histórico: quantidade de linhas excedida');
+// Rejeita meses impossíveis, profissionais sem nome e linhas duplicadas no histórico.
+const historicalKeys = new Set();
 for (const [i, row] of historical.rows.entries()) {
   if (!Array.isArray(row) || row.length !== 14 || !/^20\d{2}-\d{2}$/.test(row[0]) || !['captador','liner','closer'].includes(row[1]) || typeof row[2] !== 'string' || row[2].length > 200 || !row.slice(3).every(v => typeof v === 'number' && Number.isFinite(v) && v >= 0)) {
     throw Error(`Histórico: linha ${i + 1} inválida`);
   }
+  if (!/^20\\d{2}-(0[1-9]|1[0-2])$/.test(row[0]) || !row[2].trim()) {
+    throw Error(`Histórico: mês ou profissional inválido na linha ${i + 1}`);
+  }
+  const key = JSON.stringify(row.slice(0, 3));
+  if (historicalKeys.has(key)) throw Error(`Histórico: registro duplicado na linha ${i + 1}`);
+  historicalKeys.add(key);
 }
 
 // Cobertura de regressão para recursos essenciais, sem ler nem modificar cadastros locais.
