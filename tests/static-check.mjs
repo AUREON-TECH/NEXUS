@@ -76,3 +76,17 @@ if (!connectSource || !/escapeHtml\s*\(\s*n\.id\s*\)/.test(connectSource) || !/e
 }
 
 console.log(`Validação estática OK: ${checked} script(s), elementos essenciais e ${historical.rows.length} linhas de histórico.`);
+
+// Regressões críticas: concorrência entre abas e busca tolerante a acentos.
+// Não executa o aplicativo nem toca no armazenamento do usuário.
+const concurrencyChecks = [
+  ['observador de alterações em outra aba', /addEventListener\s*\(\s*['"]storage['"]/],
+  ['verificação da versão antes de gravar', /function\s+verifyStoredVersion\s*\(/],
+  ['bloqueio de gravação em caso de conflito', /\bstorageProtected\s*=\s*true/]
+];
+for (const [feature, pattern] of concurrencyChecks) {
+  if (!pattern.test(html)) throw Error(`Proteção de persistência ausente: ${feature}`);
+}
+if (!/function\s+normalizeSearch\s*\(/.test(html) || !/\.normalize\s*\(\s*['"]NFD['"]\s*\)/.test(html)) {
+  throw Error('Busca sem normalização de acentos');
+}
