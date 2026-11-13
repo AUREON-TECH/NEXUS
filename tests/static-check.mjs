@@ -75,7 +75,6 @@ if (!connectSource || !/escapeHtml\s*\(\s*n\.id\s*\)/.test(connectSource) || !/e
   throw Error('Conexões: identificador ou nome sem escape HTML');
 }
 
-console.log(`Validação estática OK: ${checked} script(s), elementos essenciais e ${historical.rows.length} linhas de histórico.`);
 
 // Regressões críticas: concorrência entre abas e busca tolerante a acentos.
 // Não executa o aplicativo nem toca no armazenamento do usuário.
@@ -90,3 +89,5 @@ for (const [feature, pattern] of concurrencyChecks) {
 if (!/function\s+normalizeSearch\s*\(/.test(html) || !/\.normalize\s*\(\s*['"]NFD['"]\s*\)/.test(html)) {
   throw Error('Busca sem normalização de acentos');
 }
+
+console.log(`Validação estática OK: ${checked} script(s), elementos essenciais e ${historical.rows.length} linhas de histórico.`);
