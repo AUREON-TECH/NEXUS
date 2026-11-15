@@ -96,7 +96,7 @@ if (!analyticsValidator) throw Error('Validador analítico compartilhado ausente
 for (const [feature, pattern] of [
   ['armazenamento local', /if\s*\(validAnalyticsRows\(saved\)\)/],
   ['histórico remoto', /if\s*\(!validAnalyticsRows\(rows\)\)/],
-  ['importação', /validAnalyticsRows\(rows\)/]
+  ['importação', /jsonInput\.onchange\s*=\s*async\s*\(\)\s*=>\s*\{[\s\S]*?if\s*\(!validAnalyticsRows\(rows\)\)\s*throw\s+Error\(['"]Formato agregado inválido\./]
 ]) {
   if (!pattern.test(html)) throw Error(`Validação analítica ausente: ${feature}`);
 }
