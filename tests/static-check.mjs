@@ -100,6 +100,20 @@ for (const [feature, pattern] of [
 ]) {
   if (!pattern.test(html)) throw Error(`Validação analítica ausente: ${feature}`);
 }
+// A restauração analítica deve pedir confirmação antes de substituir dados locais.
+const importHandler = html.match(/jsonInput\.onchange\s*=\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\n\s*analyticsRows\s*=/)?.[1];
+if (!importHandler) throw Error('Manipulador de importação analítica não localizado');
+const historyConfirm = importHandler.indexOf("confirm('Importar '");
+const historySave = importHandler.indexOf('anSave(ANALYTICS_KEY,rows)');
+if (historyConfirm < 0 || historySave < 0 || historyConfirm > historySave) {
+  throw Error('Importação analítica sem confirmação antes de substituir histórico');
+}
+const costsConfirm = importHandler.indexOf("confirm('Restaurar também os custos do backup?");
+const costsSave = importHandler.indexOf('anSave(ANALYTICS_COSTS_KEY,safe)');
+if (costsConfirm < 0 || costsSave < 0 || costsConfirm > costsSave) {
+  throw Error('Importação de custos sem confirmação antes de substituir dados');
+}
+
 if (!/r\[2\]\.trim\(\)/.test(analyticsValidator) || !/Number\.isFinite/.test(analyticsValidator)) {
   throw Error('Validador analítico não verifica nomes vazios ou números não finitos');
 }
